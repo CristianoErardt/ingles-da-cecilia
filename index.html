@@ -832,7 +832,7 @@ async function tIntro(t, ctx){
   bigCard(w);
   tip(t.quick
     ? `Ela errou esta antes. Aponte e repitam juntas: <b>${esc(w.en)}</b> (${esc(w.pt)}).`
-    : `Aponte e diga junto: <b>${esc(w.en)}</b> (${esc(w.pt)}). Pergunte <b>"What is this?"</b> e deixe ela repetir.${micOn() ? ' O 🎤 escuta ela.' : ''}`);
+    : `Aponte e diga junto: <b>${esc(w.en)}</b> (${esc(w.pt)}). Pergunte <b>"What is this?"</b> e deixe ela repetir. 🔊 repete a palavra.${micOn() ? ' O 🎤 escuta ela.' : ''}`);
   await say([['en', w.en]]); if (!alive(ctx.tok)) return;
   await wait(500);
   await say([['en', w.en]]); if (!alive(ctx.tok)) return;
@@ -851,10 +851,11 @@ async function tSay(t, ctx){
 // ➜ é da mãe: avança quando ela falou (ou quando é hora de seguir). 🎤 deixa o app escutar.
 async function speakPractice(w, ctx, {recall, act}){
   const mic = micOn();
-  act.innerHTML = (recall ? `<button class="round" id="hint" aria-label="Dica">💡</button>` : '') +
+  act.innerHTML = (recall ? `<button class="round" id="hint" aria-label="Dica">💡</button>` : `<button class="round" id="again" aria-label="Ouvir de novo">🔊</button>`) +
     (mic ? `<button class="mic" id="mic" aria-label="Falar">🎤</button>` : '') +
     `<button class="next ${mic ? 'small' : ''}" id="nx" aria-label="Próximo">➜</button>`;
   if (recall) $('#hint').onclick = () => { stage.querySelector('.lbl')?.classList.remove('hidden'); say([['en', w.en]]); };
+  else $('#again').onclick = () => $('#pic').click();
   const nx = $('#nx'), micB = $('#mic');
   let tried = false;
   while (alive(ctx.tok)){
