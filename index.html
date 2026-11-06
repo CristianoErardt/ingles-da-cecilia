@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cecília">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#9ad8f5">
+<title>Inglês da Cecília</title>
+<link rel="apple-touch-icon" id="touchicon" href="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap">
+<style>
+/* Layout: one-screen app — sky map with a winding trail; lessons are full-screen stages with huge touch targets. Single bright daytime look on purpose. */
+:root{
+  --sky:#9ad8f5; --sky-lo:#eaf7ff; --grass:#8bd17c; --sun:#ffd23f;
+  --ink:#263042; --paper:#fffaf0; --coral:#ff7a6b; --good:#2fbf71;
+  --lock:#c9d3dc; --trail:#fff4d6; --trail-dot:#f0b85a;
+  --font:'Baloo 2','Arial Rounded MT Bold',ui-rounded,'Helvetica Neue',system-ui,sans-serif;
+  --emoji:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:linear-gradient(180deg,var(--sky) 0%,var(--sky-lo) 70%);
+  color:var(--ink);font-family:var(--font);font-size:18px;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  touch-action:manipulation;overflow:hidden;-webkit-tap-highlight-color:transparent;
+}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0;touch-action:manipulation}
+button:focus-visible{outline:4px solid var(--ink);outline-offset:4px}
+#app{
+  height:100%;display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+.emo{font-family:var(--emoji);line-height:1}
+.card{background:var(--paper);border-radius:32px;box-shadow:0 8px 0 rgba(38,48,66,.14)}
+
+/* ---------- splash ---------- */
+.splash{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center}
+.splash .hero{font-size:min(34vmin,220px);animation:hop 1.6s ease-in-out infinite}
+.splash h1{margin:0;font-size:clamp(40px,8vmin,72px);font-weight:800;line-height:1;text-wrap:balance}
+.splash h1 small{display:block;font-size:.42em;font-weight:700;opacity:.7;margin-top:6px}
+.go{margin-top:18px;background:var(--good);color:#fff;font-size:clamp(34px,6vmin,52px);font-weight:800;
+  padding:14px 56px;border-radius:999px;box-shadow:0 10px 0 #1f8a51;animation:pulse 1.8s ease-in-out infinite}
+.go:active{transform:translateY(6px);box-shadow:0 4px 0 #1f8a51}
+
+/* ---------- top bar ---------- */
+.top{display:flex;align-items:center;gap:12px;padding-block:10px}
+.hello{display:flex;align-items:center;gap:8px;font-size:clamp(24px,4vmin,34px);font-weight:800}
+.hello .emo{font-size:1.4em}
+.spacer{flex:1}
+.pill{display:flex;align-items:center;gap:6px;background:var(--paper);border-radius:999px;padding:6px 16px;
+  font-size:24px;font-weight:800;box-shadow:0 5px 0 rgba(38,48,66,.14);min-height:56px}
+.pill .emo{font-size:30px}
+.gear{position:relative;width:56px;height:56px;border-radius:50%;background:var(--paper);box-shadow:0 5px 0 rgba(38,48,66,.14);font-size:28px}
+.gear svg{position:absolute;inset:-4px;width:64px;height:64px;transform:rotate(-90deg);pointer-events:none}
+.gear circle{fill:none;stroke:var(--coral);stroke-width:5;stroke-dasharray:188;stroke-dashoffset:188}
+.gear.hold circle{transition:stroke-dashoffset 1.5s linear;stroke-dashoffset:0}
+
+/* ---------- map ---------- */
+.mapwrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;margin-inline:-16px;overscroll-behavior:contain}
+.map{position:relative;width:100%;max-width:760px;margin:0 auto}
+.trail{position:absolute;left:0;top:0;pointer-events:none}
+.banner{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;white-space:nowrap;
+  background:var(--paper);border:5px solid var(--wc);border-radius:999px;padding:4px 24px 4px 14px;font-size:28px;font-weight:800;
+  box-shadow:0 6px 0 rgba(38,48,66,.12)}
+.banner .emo{font-size:38px}
+.node{position:absolute;width:108px;height:108px;margin:-54px 0 0 -54px;border-radius:50%;
+  background:var(--wc);box-shadow:0 9px 0 color-mix(in srgb,var(--wc) 62%,#263042);font-size:54px;
+  display:grid;place-items:center;transition:transform .15s}
+.node:active{transform:translateY(5px)}
+.node.locked{background:var(--lock);box-shadow:0 9px 0 #9aa7b3}
+.node.locked > .emo:first-child{filter:grayscale(1);opacity:.45}
+.node .lock{position:absolute;right:-4px;bottom:-4px;font-size:30px}
+.node.current{width:128px;height:128px;margin:-64px 0 0 -64px;font-size:64px;animation:pulse 1.6s ease-in-out infinite;
+  outline:6px solid #fff;outline-offset:4px}
+.nstars{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:12px;display:flex;gap:2px;font-size:24px;white-space:nowrap}
+.nstars .off{filter:grayscale(1);opacity:.35}
+.mascot{position:absolute;font-size:66px;margin-top:-50px;animation:hop 1.4s ease-in-out infinite;pointer-events:none}
+
+/* ---------- lesson ---------- */
+.lesson{flex:1;display:flex;flex-direction:column;min-height:0}
+.lbar{display:flex;align-items:center;gap:16px;padding-block:12px}
+.xbtn{width:56px;height:56px;border-radius:50%;background:var(--paper);font-size:28px;font-weight:800;box-shadow:0 5px 0 rgba(38,48,66,.14);flex:none}
+.prog{position:relative;flex:1;height:26px;border-radius:999px;background:rgba(255,255,255,.75)}
+.prog .fill{position:absolute;inset:0 auto 0 0;border-radius:999px;background:linear-gradient(90deg,var(--sun),#ffb03b);transition:width .5s}
+.prog .hopper{position:absolute;top:50%;font-size:44px;transform:translate(-50%,-62%);transition:left .5s}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;min-height:0;position:relative;padding-bottom:12px}
+.stage.enter>*{animation:rise-in .35s ease-out both}
+.prompt{display:flex;align-items:center;gap:18px}
+.speaker{width:88px;height:88px;border-radius:50%;background:#fff;font-size:44px;box-shadow:0 7px 0 rgba(38,48,66,.16)}
+.speaker:active{transform:translateY(4px)}
+.opts{display:grid;gap:clamp(12px,2.6vmin,28px);grid-template-columns:repeat(var(--cols),minmax(0,1fr));
+  width:min(100%,960px,calc((100vh - 270px) * var(--cols) / var(--rows)));
+  width:min(100%,960px,calc((100dvh - 270px) * var(--cols) / var(--rows)))}
+.opt{aspect-ratio:1/1.06;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  container-type:inline-size;transition:transform .15s,opacity .3s,box-shadow .2s;border:6px solid transparent}
+.opt:active{transform:translateY(5px)}
+.opt .pic{font-size:90px;font-size:50cqi}
+.opt.right{border-color:var(--good);box-shadow:0 8px 0 var(--good);animation:yay .5s}
+.opt.wrong{opacity:.38}
+.opt.hint{animation:glow 1s ease-in-out infinite}
+.pic{display:flex;align-items:center;justify-content:center;line-height:1}
+.lbl{font-weight:800;font-size:clamp(22px,9cqi,40px);line-height:1.1;letter-spacing:.01em}
+.lbl.big{font-size:clamp(38px,7vmin,64px)}
+.lbl.hidden{visibility:hidden}
+.blob{display:inline-block;width:.95em;height:.82em;background:var(--c);
+  border-radius:58% 42% 55% 45%/48% 60% 40% 52%;
+  box-shadow:inset -.07em -.09em 0 rgba(0,0,0,.14),inset .07em .06em 0 rgba(255,255,255,.4)}
+.count{display:grid;grid-template-columns:repeat(var(--k),auto);gap:.04em .1em;justify-items:center;align-items:center}
+.intro{display:flex;flex-direction:column;align-items:center;gap:10px}
+.bigpic{width:min(58vmin,400px);aspect-ratio:1;display:grid;place-items:center;container-type:inline-size}
+.bigpic .pic{font-size:160px;font-size:62cqi}
+.bigpic.bounce{animation:yay .5s}
+.actions{display:flex;align-items:center;gap:22px;min-height:120px}
+.mic{width:120px;height:120px;border-radius:50%;background:var(--coral);font-size:58px;box-shadow:0 9px 0 #d9554a;animation:pulse 1.6s ease-in-out infinite}
+.mic.listening{background:#ff9d47;box-shadow:0 0 0 0 rgba(255,157,71,.7);animation:listen 1s ease-out infinite}
+.mic.ok{background:var(--good);box-shadow:0 9px 0 #1f8a51;animation:yay .5s}
+.round{width:84px;height:84px;border-radius:50%;background:#fff;font-size:40px;box-shadow:0 7px 0 rgba(38,48,66,.16)}
+.next{width:120px;height:120px;border-radius:50%;background:var(--good);color:#fff;font-size:64px;font-weight:800;box-shadow:0 9px 0 #1f8a51;animation:pulse 1.6s ease-in-out infinite}
+.next:active,.mic:active,.round:active{transform:translateY(5px)}
+.say-hint{font-size:22px;font-weight:700;opacity:.65}
+
+/* bubbles */
+.pond{position:relative;flex:1;width:100%;overflow:hidden;border-radius:32px;background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(120,200,255,.35))}
+.bubble{position:absolute;bottom:0;border-radius:50%;animation:rise linear forwards}
+.bubble .sway{display:block;width:100%;height:100%;animation:sway 2.4s ease-in-out infinite alternate}
+.bubble .in{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;
+  background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.95) 0 8%,rgba(255,255,255,.35) 20%,rgba(190,230,255,.25) 60%,rgba(255,255,255,.6) 100%);
+  border:3px solid rgba(255,255,255,.9);box-shadow:0 6px 18px rgba(38,48,66,.12);transition:transform .25s,opacity .25s}
+.bubble .pic{font-size:var(--ps)}
+.bubble .in.wob{animation:shake .45s}
+.bubble.popped .in{transform:scale(1.5);opacity:0}
+.dots{display:flex;gap:10px}
+.dots i{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.7);border:4px solid #fff}
+.dots i.on{background:var(--sun);border-color:#ffb03b}
+
+/* end */
+.done{display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
+.done h2{margin:0;font-size:clamp(40px,8vmin,64px);line-height:1}
+.bigstars{display:flex;gap:10px;font-size:clamp(64px,13vmin,110px)}
+.bigstars span{animation:star-in .5s cubic-bezier(.3,1.6,.5,1) both}
+.bigstars .off{filter:grayscale(1);opacity:.3}
+.sticker{padding:16px 34px;display:flex;flex-direction:column;align-items:center;gap:0}
+.sticker .emo{font-size:clamp(80px,16vmin,130px);animation:hop 1.4s ease-in-out infinite}
+.sticker b{font-size:30px}
+.sticker small{font-size:18px;font-weight:700;opacity:.6}
+
+/* album */
+.album{flex:1;overflow-y:auto;padding-bottom:20px}
+.album h2{margin:4px 0 14px;font-size:34px}
+.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:16px}
+.slot{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.slot .emo{font-size:64px}
+.slot b{font-size:20px}
+.slot.empty{background:rgba(255,255,255,.4);box-shadow:none;border:4px dashed rgba(38,48,66,.18)}
+.slot.empty .emo{font-size:40px;opacity:.25}
+
+/* overlays */
+.overlay{position:fixed;inset:0;z-index:20;background:rgba(38,48,66,.45);display:flex;align-items:center;justify-content:center;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.ask{padding:28px 36px;display:flex;flex-direction:column;align-items:center;gap:20px}
+.ask .row{display:flex;gap:28px}
+.ask .yes{width:110px;height:110px;border-radius:50%;background:var(--coral);color:#fff;font-size:52px;box-shadow:0 8px 0 #d9554a}
+.ask .no{width:110px;height:110px;border-radius:50%;background:var(--good);color:#fff;font-size:52px;box-shadow:0 8px 0 #1f8a51}
+.parent{width:min(820px,100%);max-height:100%;overflow-y:auto;padding:24px 28px;-webkit-user-select:text;user-select:text;font-size:17px}
+.parent h2{margin:0 0 4px;font-size:30px}
+.parent h3{margin:22px 0 8px;font-size:21px}
+.parent p{margin:6px 0;line-height:1.45;max-width:65ch}
+.parent .sum{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+.parent .sum div{background:#fff;border-radius:16px;padding:10px 16px;font-weight:700}
+.parent .sum b{font-size:26px;display:block;line-height:1;font-variant-numeric:tabular-nums}
+.wrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.wrow .wn{width:120px;font-weight:800}
+.chip{border-radius:999px;padding:3px 12px;font-weight:700;font-size:16px;background:#eef1f4;color:#6b7684}
+.chip.learn{background:#fff1c2;color:#7a5a00}
+.chip.weak{background:#ffd9d4;color:#a3291c}
+.chip.master{background:#cff3df;color:#16653c}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.setting{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid #eadfc8}
+.setting span{min-width:0}
+.setting small{display:block;opacity:.65;font-weight:500}
+.btn{background:#fff;border-radius:14px;padding:8px 16px;font-weight:800;box-shadow:0 4px 0 rgba(38,48,66,.14);white-space:nowrap}
+.btn.on{background:var(--good);color:#fff}
+.btn.danger{background:var(--coral);color:#fff}
+.close{position:sticky;top:0;float:right;width:48px;height:48px;border-radius:50%;background:#fff;font-size:24px;font-weight:800;box-shadow:0 4px 0 rgba(38,48,66,.14)}
+.status{font-weight:700}
+
+canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:30}
+
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+@keyframes yay{0%{transform:scale(1)}40%{transform:scale(1.12) rotate(-3deg)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-12px)}40%{transform:translateX(12px)}60%{transform:translateX(-8px)}80%{transform:translateX(8px)}}
+.shake{animation:shake .45s}
+@keyframes glow{0%,100%{box-shadow:0 8px 0 rgba(38,48,66,.14),0 0 0 0 rgba(255,210,63,.9)}50%{box-shadow:0 8px 0 rgba(38,48,66,.14),0 0 0 18px rgba(255,210,63,.0)}}
+@keyframes listen{0%{box-shadow:0 0 0 0 rgba(255,157,71,.7)}100%{box-shadow:0 0 0 34px rgba(255,157,71,0)}}
+@keyframes rise{from{transform:translateY(105%)}to{transform:translateY(calc(-1 * var(--h)))}}
+@keyframes sway{from{transform:translateX(-18px)}to{transform:translateX(18px)}}
+@keyframes rise-in{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes star-in{from{transform:scale(0) rotate(-40deg)}to{transform:scale(1) rotate(0)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important}
+  .bubble{animation-duration:9s!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<canvas id="fx"></canvas>
+<script>
+"use strict";
+/* ================= CONTENT ================= */
+const WORLDS = [
+ {id:'animals', name:'Animais', icon:'🐶', color:'#ffb347', words:[
+  {en:'dog', pt:'cachorro', e:'🐶', alias:['dug','doug','dag','dogs','doggy']},
+  {en:'cat', pt:'gato', e:'🐱', alias:['cut','kat','cats','kit','kitty']},
+  {en:'fish', pt:'peixe', e:'🐟', alias:['fist','fiss','fishy']},
+  {en:'bird', pt:'pássaro', e:'🐦', alias:['bert','burt','bud','word','birdie']},
+  {en:'cow', pt:'vaca', e:'🐮', alias:['cal','kal','how','ciao','kow']},
+  {en:'duck', pt:'pato', e:'🦆', alias:['dark','doc','dock','ducky']}]},
+ {id:'colors', name:'Cores', icon:'🎨', color:'#c99bff', words:[
+  {en:'red', pt:'vermelho', c:'#e53935', alias:['read','ret','rad','rid']},
+  {en:'blue', pt:'azul', c:'#1e88e5', alias:['blew','bloo','glue','blu']},
+  {en:'yellow', pt:'amarelo', c:'#fdd835', alias:['hello','jello','yell','yello']},
+  {en:'green', pt:'verde', c:'#43a047', alias:['grin','queen','grain','greene']},
+  {en:'pink', pt:'rosa', c:'#f06fab', alias:['peak','ping','think','pinky']},
+  {en:'purple', pt:'roxo', c:'#8e44ad', alias:['people','pupil','purpel']}]},
+ {id:'fruits', name:'Frutas', icon:'🍎', color:'#ff8a80', words:[
+  {en:'apple', pt:'maçã', e:'🍎', alias:['apples','happy','apel']},
+  {en:'banana', pt:'banana', e:'🍌', alias:['bananas','nana']},
+  {en:'grapes', pt:'uvas', e:'🍇', alias:['grape','graves','crepes','great']},
+  {en:'orange', pt:'laranja', e:'🍊', alias:['oranges','orang','arranged']},
+  {en:'strawberry', pt:'morango', e:'🍓', alias:['strawberries','straw berry']},
+  {en:'watermelon', pt:'melancia', e:'🍉', alias:['water melon','watermelons']}]},
+ {id:'numbers', name:'Números', icon:'🔢', color:'#7fd3c3', words:[
+  {en:'one', pt:'um', n:1, e:'🐞', alias:['1','won','juan','on']},
+  {en:'two', pt:'dois', n:2, e:'🐞', alias:['2','to','too','tu','do']},
+  {en:'three', pt:'três', n:3, e:'🐞', alias:['3','tree','free','tray']},
+  {en:'four', pt:'quatro', n:4, e:'🐞', alias:['4','for','far','fore','floor']},
+  {en:'five', pt:'cinco', n:5, e:'🐞', alias:['5','fife','fight','fine']},
+  {en:'six', pt:'seis', n:6, e:'🐞', alias:['6','sis','sick','sits','sex']}]},
+ {id:'family', name:'Família', icon:'🏠', color:'#ffcf5c', words:[
+  {en:'mom', pt:'mamãe', e:'👩', alias:['mum','mama','mommy','mon','mam','mother']},
+  {en:'dad', pt:'papai', e:'👨', alias:['daddy','that','dead','dada','dat','father']},
+  {en:'baby', pt:'bebê', e:'👶', alias:['babe','bebe','maybe','bay be']},
+  {en:'brother', pt:'irmão', e:'👦', alias:['brothers','bother','brotha']},
+  {en:'sister', pt:'irmã', e:'👧', alias:['sisters','sista','cister']},
+  {en:'grandma', pt:'vovó', e:'👵', alias:['grandmother','granma','grammar','granny','grandmom']}]},
+ {id:'body', name:'Corpo', icon:'👃', color:'#ff9fc4', words:[
+  {en:'eyes', pt:'olhos', e:'👀', alias:['eye','ice','eyes','i s']},
+  {en:'nose', pt:'nariz', e:'👃', alias:['knows','no','nos','noes']},
+  {en:'mouth', pt:'boca', e:'👄', alias:['mouse','mount','mouf','mouths']},
+  {en:'hand', pt:'mão', e:'✋', alias:['and','hen','hands','han']},
+  {en:'foot', pt:'pé', e:'🦶', alias:['food','foo','put','fut','feet']},
+  {en:'ear', pt:'orelha', e:'👂', alias:['here','year','hear','beer','ears']}]},
+ {id:'toys', name:'Brinquedos', icon:'🧸', color:'#8fb8ff', words:[
+  {en:'ball', pt:'bola', e:'⚽', alias:['bowl','bow','all','paul','balls']},
+  {en:'car', pt:'carro', e:'🚗', alias:['call','card','core','cars','car']},
+  {en:'book', pt:'livro', e:'📖', alias:['look','buk','books','took']},
+  {en:'teddy bear', pt:'ursinho', e:'🧸', alias:['teddy','teddybear','teddy bare','bear']},
+  {en:'balloon', pt:'balão', e:'🎈', alias:['baloon','balloons','ballon']},
+  {en:'train', pt:'trem', e:'🚂', alias:['trains','trane','tray']}]},
+ {id:'food', name:'Comidinhas', icon:'🍪', color:'#e9b07a', words:[
+  {en:'milk', pt:'leite', e:'🥛', alias:['meal','mook','milky','melk']},
+  {en:'water', pt:'água', e:'💧', alias:['wata','order','what are','waiter','wader']},
+  {en:'bread', pt:'pão', e:'🍞', alias:['bred','bed','brad']},
+  {en:'cake', pt:'bolo', e:'🎂', alias:['kate','cak','take','cakes']},
+  {en:'ice cream', pt:'sorvete', e:'🍦', alias:['icecream','i scream','ice-cream']},
+  {en:'cookie', pt:'biscoito', e:'🍪', alias:['cookies','cooky','kooky']}]},
+ {id:'nature', name:'Natureza', icon:'🌳', color:'#8bd17c', words:[
+  {en:'sun', pt:'sol', e:'☀️', alias:['son','some','sum','sunny']},
+  {en:'moon', pt:'lua', e:'🌙', alias:['noon','mun','moo']},
+  {en:'star', pt:'estrela', e:'⭐', alias:['stars','start','store','stuff']},
+  {en:'tree', pt:'árvore', e:'🌳', alias:['three','free','trees','tea']},
+  {en:'flower', pt:'flor', e:'🌸', alias:['flour','flowers','flor']},
+  {en:'rain', pt:'chuva', e:'🌧️', alias:['ran','rainy','train','rein']}]},
+];
+const STICKERS = [
+ ['🦄','unicorn','unicórnio'],['🌈','rainbow','arco-íris'],['🦋','butterfly','borboleta'],
+ ['🐬','dolphin','golfinho'],['🍭','lollipop','pirulito'],['👑','crown','coroa'],
+ ['🐢','turtle','tartaruga'],['🦖','dinosaur','dinossauro'],['🐙','octopus','polvo'],
+ ['🐧','penguin','pinguim'],['🦁','lion','leão'],['🐼','panda','panda'],
+ ['🐸','frog','sapo'],['🧁','cupcake','bolinho'],['🌻','sunflower','girassol'],
+ ['🐞','ladybug','joaninha'],['🐳','whale','baleia'],['🐵','monkey','macaco'],
+ ['🐯','tiger','tigre'],['🐘','elephant','elefante'],['🦒','giraffe','girafa'],
+ ['🐨','koala','coala'],['🏰','castle','castelo'],['🧚','fairy','fada'],
+ ['🧜‍♀️','mermaid','sereia'],['👸','princess','princesa'],['🚀','rocket','foguete'],
+];
+const LESSONS_PER_WORLD = 3;
+const TOTAL = WORLDS.length * LESSONS_PER_WORLD;
+const ALLW = WORLDS.flatMap(w => w.words);
+
+/* ================= STATE ================= */
+const KEY = 'cecilia-english-v1';
+const defaults = () => ({done:{}, words:{}, settings:{mic:true, showText:true, slow:true, unlockAll:false}});
+let S = (() => {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if (s) { const d = defaults(); return {...d, ...s, settings:{...d.settings, ...(s.settings||{})}}; }
+  } catch (e) {}
+  return defaults();
+})();
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+function stat(w){ return S.words[w.en] || (S.words[w.en] = {seen:0, ok:0, miss:0, streak:0, spokeOk:0, spokeTry:0}); }
+function record(w, firstTry){
+  const s = stat(w); s.seen++;
+  if (firstTry){ s.ok++; s.streak++; } else { s.miss++; s.streak = 0; }
+  save();
+}
+function wordState(w){
+  const s = S.words[w.en];
+  if (!s || !s.seen) return 'new';
+  if (s.streak >= 3) return 'master';
+  if (s.miss > 0 && s.streak < 2) return 'weak';
+  return 'learn';
+}
+const lessonKey = g => WORLDS[Math.floor(g/3)].id + '-' + (g % 3);
+const isDone = g => !!S.done[lessonKey(g)];
+function currentIndex(){ for (let g = 0; g < TOTAL; g++) if (!isDone(g)) return g; return TOTAL; }
+
+/* ================= HELPERS ================= */
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const rand = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const tap = el => new Promise(r => el.addEventListener('click', r, {once:true}));
+const worldOf = w => WORLDS.find(wd => wd.words.includes(w));
+
+function pic(w){
+  if (w.c) return `<span class="pic"><span class="blob" style="--c:${w.c}"></span></span>`;
+  if (w.n){
+    const k = w.n <= 3 ? w.n : w.n === 4 ? 2 : 3;
+    const fs = {1:.82, 2:.46, 3:.34, 4:.4, 5:.32, 6:.32}[w.n];
+    return `<span class="pic"><span class="count" style="--k:${k};font-size:${fs}em">${`<span class="emo">${w.e}</span>`.repeat(w.n)}</span></span>`;
+  }
+  return `<span class="pic"><span class="emo">${w.e}</span></span>`;
+}
+const label = (w, cls = '') => S.settings.showText ? `<span class="lbl ${cls}">${w.en}</span>` : '';
+
+/* ================= VOICE ================= */
+const VO = {en:null, pt:null};
+const BAD = /compact|eloquence|grandma|grandpa|rocko|shelley|flo\b|reed|sandy|eddy|bad news|bells|boing|bubbles|cellos|jester|organ|superstar|trinoids|whisper|wobble|zarvox|albert|fred|junior|ralph|kathy|good news|hysterical/i;
+function bestVoice(vs, lang, names){
+  let best = null, bs = -1;
+  for (const v of vs){
+    const l = (v.lang || '').replace('_','-').toLowerCase();
+    if (!l.startsWith(lang)) continue;
+    let s = 10;
+    if (/enhanced|premium|neural|natural/i.test(v.name)) s += 3;
+    names.forEach((n, i) => { if (v.name.includes(n)) s += 9 - i; });
+    if (BAD.test(v.name)) s -= 12;
+    if (s > bs){ bs = s; best = v; }
+  }
+  return best;
+}
+function pickVoices(){
+  const vs = speechSynthesis.getVoices();
+  if (!vs.length) return;
+  VO.en = bestVoice(vs, 'en-us', ['Samantha','Ava','Allison','Susan','Nicky','Zoe','Google US English']) || bestVoice(vs, 'en', ['Karen','Moira','Serena']);
+  VO.pt = bestVoice(vs, 'pt-br', ['Luciana','Fernanda','Google português do Brasil','Felipe']) || bestVoice(vs, 'pt', []);
+}
+if ('speechSynthesis' in window){ pickVoices(); speechSynthesis.onvoiceschanged = pickVoices; }
+
+let sayId = 0;
+function utter(text, lang){
+  return new Promise(res => {
+    if (!('speechSynthesis' in window)) return res();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === 'en' ? 'en-US' : 'pt-BR';
+    const v = VO[lang]; if (v) u.voice = v;
+    u.rate = lang === 'en' ? (S.settings.slow ? 0.78 : 0.95) : 1.0;
+    u.pitch = 1.08;
+    let done = false;
+    const fin = () => { if (!done){ done = true; clearTimeout(t); res(); } };
+    u.onend = fin; u.onerror = fin;
+    const t = setTimeout(fin, 1500 + text.length * 110);
+    speechSynthesis.speak(u);
+  });
+}
+async function say(parts){
+  const my = ++sayId;
+  if ('speechSynthesis' in window && (speechSynthesis.speaking || speechSynthesis.pending)){ speechSynthesis.cancel(); await wait(80); }
+  for (const [lang, text] of parts){
+    if (my !== sayId) return;
+    await utter(text, lang);
+  }
+}
+function hush(){ sayId++; try { speechSynthesis.cancel(); } catch (e) {} }
+async function praise(){
+  const r = Math.random();
+  if (r < 0.25) return say([['pt', rand(['Isso, Cecília!','Muito bem, Cecília!','Arrasou, Cecília!'])]]);
+  return say([['en', rand(['Yes!','Great job!','Very good!','Awesome!','You did it!','Super!','Well done!'])]]);
+}
+
+/* ================= SOUND FX ================= */
+let ac = null;
+function actx(){ try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); } catch (e) {} return ac; }
+function tone(freqs, {dur = .14, type = 'sine', gap = .09, vol = .18} = {}){
+  const a = actx(); if (!a) return;
+  freqs.forEach((f, i) => {
+    const o = a.createOscillator(), g = a.createGain(), t0 = a.currentTime + i * gap;
+    o.type = type; o.frequency.setValueAtTime(f, t0);
+    g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + .015); g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+    o.connect(g).connect(a.destination); o.start(t0); o.stop(t0 + dur + .02);
+  });
+}
+const sfx = {
+  ding: () => tone([660, 880, 1320], {dur:.22}),
+  boop: () => tone([330, 247], {type:'triangle', dur:.18, gap:.12, vol:.14}),
+  pop:  () => tone([900, 1400], {dur:.08, gap:.04, vol:.16}),
+  fanfare: () => tone([523, 659, 784, 1047, 784, 1047], {dur:.25, gap:.13, type:'triangle', vol:.16}),
+};
+
+/* ================= CONFETTI ================= */
+const fx = $('#fx'), fctx = fx.getContext('2d');
+let parts = [], fxRun = false;
+function confetti(n = 140){
+  fx.width = innerWidth * devicePixelRatio; fx.height = innerHeight * devicePixelRatio;
+  const cols = ['#ff7a6b','#ffd23f','#2fbf71','#5ab2f7','#c99bff','#ff9fc4'];
+  for (let i = 0; i < n; i++) parts.push({x:innerWidth/2 + (Math.random()-.5)*innerWidth*.6, y:innerHeight*.35, vx:(Math.random()-.5)*14, vy:-Math.random()*14-4, r:Math.random()*6+4, c:rand(cols), a:Math.random()*6, life:120+Math.random()*60});
+  if (!fxRun){ fxRun = true; requestAnimationFrame(fxLoop); }
+}
+function fxLoop(){
+  const d = devicePixelRatio; fctx.clearRect(0, 0, fx.width, fx.height);
+  parts.forEach(p => { p.vy += .35; p.x += p.vx; p.y += p.vy; p.a += .2; p.life--;
+    fctx.save(); fctx.translate(p.x*d, p.y*d); fctx.rotate(p.a); fctx.fillStyle = p.c; fctx.fillRect(-p.r*d, -p.r*d/2, p.r*2*d, p.r*d); fctx.restore(); });
+  parts = parts.filter(p => p.life > 0 && p.y < innerHeight + 40);
+  if (parts.length) requestAnimationFrame(fxLoop); else { fxRun = false; fctx.clearRect(0, 0, fx.width, fx.height); }
+}
+
+/* ================= SPEECH RECOGNITION ================= */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let micBroken = false;
+const micOn = () => S.settings.mic && !!SR && !micBroken;
+function norm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim(); }
+function lev(a, b){
+  const m = a.length, n = b.length; if (!m) return n; if (!n) return m;
+  let prev = Array.from({length:n+1}, (_, j) => j);
+  for (let i = 1; i <= m; i++){
+    const cur = [i];
+    for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j-1] + 1, prev[j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[n];
+}
+const sim = (a, b) => 1 - lev(a, b) / Math.max(a.length, b.length, 1);
+function matches(list, w){
+  const targets = [w.en, ...(w.alias || [])].map(norm);
+  for (const h of list){
+    const n = norm(h); if (!n) continue;
+    const toks = n.split(' ');
+    for (const t of targets){
+      if ((' ' + n + ' ').includes(' ' + t + ' ')) return true;
+      const tc = t.replace(/ /g, ''), k = t.split(' ').length;
+      for (let i = 0; i < toks.length; i++){
+        for (let len = 1; len <= k + 1 && i + len <= toks.length; len++){
+          if (sim(toks.slice(i, i + len).join(''), tc) >= 0.6) return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+function listen(w){
+  return new Promise(res => {
+    if (!SR) return res({fatal:true});
+    hush();
+    let r; try { r = new SR(); } catch (e) { return res({fatal:true}); }
+    r.lang = 'en-US'; r.interimResults = true; r.maxAlternatives = 5; r.continuous = false;
+    const heard = new Set(); let done = false, tm = null;
+    const fin = o => { if (done) return; done = true; clearTimeout(tm); try { r.abort(); } catch (e) {} res({...o, heard:[...heard]}); };
+    r.onresult = e => {
+      for (let i = 0; i < e.results.length; i++) for (let j = 0; j < e.results[i].length; j++) heard.add(e.results[i][j].transcript);
+      if (matches([...heard], w)) fin({ok:true});
+    };
+    r.onerror = e => {
+      if (['not-allowed','service-not-allowed','audio-capture'].includes(e.error)) fin({fatal:true, error:e.error});
+      else fin({ok:matches([...heard], w), error:e.error});
+    };
+    r.onend = () => fin({ok:matches([...heard], w)});
+    tm = setTimeout(() => { try { r.stop(); } catch (e) {} setTimeout(() => fin({ok:matches([...heard], w)}), 900); }, 6000);
+    try { r.start(); } catch (e) { fin({fatal:true}); }
+  });
+}
+
+/* ================= SCREENS ================= */
+let screen = 'splash';
+let lessonToken = 0;
+const alive = tok => tok === lessonToken;
+
+function renderSplash(){
+  screen = 'splash';
+  app.innerHTML = `<div class="splash">
+    <div class="hero emo">🐰</div>
+    <h1>Hi, Cecília!<small>Vamos aprender inglês?</small></h1>
+    <button class="go" id="go">Vamos! ▶</button></div>`;
+  $('#go').onclick = () => {
+    actx(); sfx.ding();
+    say([['en','Hi, Cecília!'],['pt','Vamos brincar de inglês? Escolhe a bolinha que está pulando!']]);
+    renderMap();
+  };
+}
+
+function topBar(){
+  const n = Object.keys(S.done).length;
+  return `<div class="top">
+    <button class="hello" id="hi"><span class="emo">🐰</span>Hi, Cecília!</button>
+    <span class="spacer"></span>
+    <button class="pill" id="alb" aria-label="Álbum de figurinhas"><span class="emo">📒</span>${n}</button>
+    <button class="gear" id="gear" aria-label="Área dos pais (segure)"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30"/></svg>⚙️</button>
+  </div>`;
+}
+function wireTop(){
+  $('#hi').onclick = () => say([['en','Hi, Cecília!'],['pt','Eu sou a Bunny!']]);
+  $('#alb').onclick = renderAlbum;
+  const g = $('#gear'); let t = null;
+  const start = e => { e.preventDefault(); g.classList.add('hold'); t = setTimeout(() => { g.classList.remove('hold'); openParent(); }, 1500); };
+  const stop = () => { g.classList.remove('hold'); clearTimeout(t); };
+  g.addEventListener('pointerdown', start); g.addEventListener('pointerup', stop); g.addEventListener('pointerleave', stop); g.addEventListener('pointercancel', stop);
+  g.addEventListener('click', () => { if (!document.querySelector('.overlay')) say([['pt','Peça para a mamãe ou o papai.']]); });
+}
+
+function renderMap(){
+  screen = 'map'; lessonToken++; hush();
+  app.innerHTML = topBar() + `<main class="mapwrap" id="mapwrap"><div class="map" id="map"></div></main>`;
+  wireTop(); layoutMap(true);
+}
+function layoutMap(scroll){
+  const map = $('#map'); if (!map) return;
+  const W = map.clientWidth, cur = currentIndex();
+  const amp = Math.min(W * 0.27, 210);
+  let y = 50, g = 0, html = '', pts = [], curY = 0;
+  WORLDS.forEach(wd => {
+    html += `<div class="banner" style="top:${y - 28}px;--wc:${wd.color}"><span class="emo">${wd.icon}</span>${wd.name}</div>`;
+    y += 110;
+    for (let li = 0; li < LESSONS_PER_WORLD; li++, g++){
+      const x = W / 2 + Math.sin(g * 1.1 + 0.6) * amp;
+      const done = isDone(g), current = g === cur, playable = done || current || S.settings.unlockAll;
+      const cls = current ? 'current' : playable ? 'open' : 'locked';
+      const ic = li === 2 ? '🎁' : wd.icon;
+      const st = S.done[lessonKey(g)];
+      const stars = done ? `<span class="nstars">${[1,2,3].map(i => `<span class="emo ${i <= st.stars ? '' : 'off'}">⭐</span>`).join('')}</span>` : '';
+      html += `<button class="node ${cls}" data-g="${g}" style="left:${x}px;top:${y}px;--wc:${wd.color}" aria-label="${wd.name} ${li+1}"><span class="emo">${ic}</span>${playable ? '' : '<span class="lock emo">🔒</span>'}${stars}</button>`;
+      if (current){ const side = x > W / 2 ? -1 : 1; html += `<span class="mascot emo" style="left:${x + side * 110 - 33}px;top:${y}px">🐰</span>`; curY = y; }
+      pts.push([x, y]); y += 150;
+    }
+    y += 10;
+  });
+  if (cur >= TOTAL){ html += `<div class="banner" style="top:${y}px;--wc:#ffd23f"><span class="emo">🏆</span>Você completou tudo!</div>`; curY = y; y += 80; }
+  const H = y + 40;
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for (let i = 1; i < pts.length; i++){ const [x1, y1] = pts[i-1], [x2, y2] = pts[i], ym = (y1 + y2) / 2; d += ` C${x1},${ym} ${x2},${ym} ${x2},${y2}`; }
+  map.style.height = H + 'px';
+  map.innerHTML = `<svg class="trail" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+     <path d="${d}" fill="none" stroke="var(--trail)" stroke-width="26" stroke-linecap="round"/>
+     <path d="${d}" fill="none" stroke="var(--trail-dot)" stroke-width="7" stroke-linecap="round" stroke-dasharray="1 24"/></svg>` + html;
+  map.querySelectorAll('.node').forEach(b => b.onclick = () => {
+    const g = +b.dataset.g;
+    if (b.classList.contains('locked')){ sfx.boop(); b.classList.add('shake'); setTimeout(() => b.classList.remove('shake'), 450); say([['pt','Essa ainda está trancada. Vamos na que está pulando!']]); return; }
+    actx(); runLesson(g);
+  });
+  if (scroll){ const wrap = $('#mapwrap'); wrap.scrollTop = Math.max(0, curY - wrap.clientHeight / 2); }
+}
+addEventListener('resize', () => { if (screen === 'map') layoutMap(false); });
+
+function renderAlbum(){
+  screen = 'album'; hush();
+  const slots = STICKERS.map((s, g) => isDone(g)
+    ? `<button class="slot card" data-g="${g}"><span class="emo">${s[0]}</span><b>${s[1]}</b></button>`
+    : `<div class="slot card empty"><span class="emo">❔</span></div>`).join('');
+  app.innerHTML = `<div class="top"><button class="xbtn" id="back" aria-label="Voltar">←</button><span class="spacer"></span></div>
+    <div class="album"><h2>Minhas figurinhas</h2><div class="agrid">${slots}</div></div>`;
+  $('#back').onclick = renderMap;
+  say([['pt','Suas figurinhas! Toca numa para ouvir o nome em inglês.']]);
+  app.querySelectorAll('.slot[data-g]').forEach(b => b.onclick = () => { const s = STICKERS[+b.dataset.g]; b.classList.remove('shake'); void b.offsetWidth; b.style.animation = 'yay .5s'; setTimeout(() => b.style.animation = '', 500); say([['en', s[1]]]); });
+}
+
+/* ================= LESSON ================= */
+function optionsFor(w, pool, n){
+  let others = shuffle(pool.filter(x => x !== w));
+  if (others.length < n - 1) others = others.concat(shuffle(worldOf(w).words.filter(x => x !== w && !others.includes(x))));
+  if (others.length < n - 1) others = others.concat(shuffle(ALLW.filter(x => x !== w && !others.includes(x))));
+  return shuffle([w, ...others.slice(0, n - 1)]);
+}
+function weakWords(exclude){
+  const doneWorldWords = [];
+  for (let g = 0; g < TOTAL; g++) if (isDone(g)){
+    const wd = WORLDS[Math.floor(g / 3)], li = g % 3;
+    (li === 2 ? wd.words : wd.words.slice(li * 3, li * 3 + 3)).forEach(w => { if (!doneWorldWords.includes(w)) doneWorldWords.push(w); });
+  }
+  return shuffle(doneWorldWords.filter(w => !exclude.includes(w) && wordState(w) === 'weak'))
+    .sort((a, b) => (stat(b).miss - stat(b).ok) - (stat(a).miss - stat(a).ok));
+}
+function buildLesson(g){
+  const wd = WORLDS[Math.floor(g / 3)], li = g % 3, W = wd.words, mic = micOn();
+  const T = [];
+  const fresh = li < 2 ? W.slice(li * 3, li * 3 + 3) : [];
+  // reforço: palavras que ela errou em lições anteriores voltam primeiro
+  weakWords(li < 2 ? fresh : W).slice(0, 2).forEach(w => {
+    if (stat(w).miss >= 2) T.push({type:'intro', w, quick:true});
+    T.push({type:'pick', w, n:3, pool:worldOf(w).words});
+  });
+  if (li < 2){
+    const known = W.slice(0, li * 3 + 3);
+    fresh.forEach((w, i) => { T.push({type:'intro', w}); if (i > 0) T.push({type:'pick', w, n:2, pool:fresh.slice(0, i + 1)}); });
+    shuffle(fresh).forEach(w => T.push({type:'pick', w, n:li === 0 ? 2 : 3, pool:known}));
+    if (mic) shuffle(fresh).slice(0, 2).forEach(w => T.push({type:'say', w, recall:false}));
+    shuffle(fresh).forEach(w => T.push({type:'pick', w, n:li === 0 ? 3 : 4, pool:known}));
+    T.push({type:'bubbles', w:rand(fresh), pool:known});
+  } else {
+    shuffle(W).forEach(w => T.push({type:'pick', w, n:3, pool:W}));
+    if (mic) shuffle(W).slice(0, 3).forEach(w => T.push({type:'say', w, recall:true}));
+    shuffle(W).slice(0, 4).forEach(w => T.push({type:'pick', w, n:4, pool:W}));
+    T.push({type:'bubbles', w:rand(W), pool:W});
+  }
+  return T;
+}
+
+let stage = null;
+async function runLesson(g){
+  screen = 'lesson'; hush();
+  const tok = ++lessonToken, ctx = {tok, cleanup:[]};
+  const tasks = buildLesson(g);
+  let errors = 0;
+  app.innerHTML = `<div class="lesson">
+    <div class="lbar"><button class="xbtn" id="x" aria-label="Sair">✕</button>
+      <div class="prog"><div class="fill" id="fill" style="width:0"></div><span class="hopper emo" id="hop" style="left:0">🐰</span></div></div>
+    <div class="stage" id="stage"></div></div>`;
+  stage = $('#stage');
+  $('#x').onclick = () => askExit(ctx);
+  const setProg = p => { $('#fill').style.width = (p * 100) + '%'; $('#hop').style.left = (p * 100) + '%'; };
+  for (let i = 0; i < tasks.length; i++){
+    if (!alive(tok)) return;
+    setProg(i / tasks.length);
+    const t = tasks[i];
+    stage.classList.remove('enter'); void stage.offsetWidth; stage.classList.add('enter');
+    let r = {};
+    if (t.type === 'intro') r = await tIntro(t, ctx);
+    else if (t.type === 'pick') r = await tPick(t, ctx);
+    else if (t.type === 'say') r = await tSay(t, ctx);
+    else if (t.type === 'bubbles') r = await tBubbles(t, ctx);
+    ctx.cleanup.forEach(f => f()); ctx.cleanup = [];
+    if (!alive(tok)) return;
+    r = r || {};
+    if (t.type === 'pick' || t.type === 'bubbles'){
+      record(t.w, !!r.firstTry);
+      if (!r.firstTry){
+        errors++;
+        const re = (t.re || 0) + 1;
+        if (re <= 2){
+          const ins = [];
+          if (re === 2) ins.push({type:'intro', w:t.w, quick:true});
+          ins.push({type:'pick', w:t.w, n:Math.max(2, (t.n || 3) - (re === 2 ? 1 : 0)), pool:t.pool, re});
+          tasks.splice(Math.min(i + 3, tasks.length), 0, ...ins);
+        }
+      }
+    }
+    if (r.spoke !== undefined && r.spoke !== null){ const s = stat(t.w); s.spokeTry++; if (r.spoke === true) s.spokeOk++; save(); }
+    await wait(250);
+  }
+  if (!alive(tok)) return;
+  setProg(1);
+  finishLesson(g, errors);
+}
+
+function askExit(ctx){
+  hush();
+  const o = document.createElement('div'); o.className = 'overlay';
+  o.innerHTML = `<div class="ask card"><div class="emo" style="font-size:80px">🐰</div>
+    <div class="row"><button class="no" id="stay" aria-label="Continuar">▶</button><button class="yes" id="leave" aria-label="Sair">🏠</button></div></div>`;
+  document.body.appendChild(o);
+  say([['pt','Quer parar? Toca na casinha para sair, ou no verde para continuar.']]);
+  o.querySelector('#stay').onclick = () => { hush(); o.remove(); };
+  o.querySelector('#leave').onclick = () => { o.remove(); ctx.cleanup.forEach(f => f()); renderMap(); };
+}
+
+async function tIntro(t, ctx){
+  const w = t.w;
+  stage.innerHTML = `<div class="intro"><button class="bigpic card" id="pic" aria-label="Ouvir">${pic(w)}</button>${label(w, 'big')}<div class="actions" id="act"></div></div>`;
+  const p = $('#pic');
+  p.onclick = () => { p.classList.remove('bounce'); void p.offsetWidth; p.classList.add('bounce'); say([['en', w.en]]); };
+  await say([['pt', t.quick ? rand(['Lembra?','Vamos lembrar?']) : rand(['Olha!','Olha só!','Vamos ver?'])], ['en', w.en]]);
+  if (!alive(ctx.tok)) return;
+  await wait(300);
+  await say([['en', w.en]]);
+  if (!alive(ctx.tok)) return;
+  if (t.quick){
+    $('#act').innerHTML = `<button class="next" id="nx" aria-label="Próximo">➜</button>`;
+    await tap($('#nx')); hush(); return {};
+  }
+  return speakPractice(w, ctx, {recall:false, act:$('#act')});
+}
+
+async function tSay(t, ctx){
+  const w = t.w;
+  stage.innerHTML = `<div class="intro"><button class="bigpic card" id="pic" aria-label="Ouvir">${pic(w)}</button>${label(w, 'big' + (t.recall ? ' hidden' : ''))}<div class="actions" id="act"></div></div>`;
+  $('#pic').onclick = () => say([['en', w.en]]);
+  if (!t.recall) await say([['en', w.en]]);
+  if (!alive(ctx.tok)) return;
+  const r = await speakPractice(w, ctx, {recall:t.recall, act:$('#act')});
+  const l = stage.querySelector('.lbl'); if (l) l.classList.remove('hidden');
+  return r;
+}
+
+async function speakPractice(w, ctx, {recall, act}){
+  if (!micOn()){
+    act.innerHTML = `<div class="say-hint">Repete comigo!</div><button class="next" id="nx" aria-label="Próximo">➜</button>`;
+    await say([['pt','Agora fala você:'], ['en', w.en]]);
+    await tap($('#nx')); hush();
+    return {spoke:null};
+  }
+  act.innerHTML = (recall ? `<button class="round" id="hint" aria-label="Dica">💡</button>` : '') +
+    `<button class="mic" id="mic" aria-label="Falar">🎤</button><button class="round" id="sk" aria-label="Pular">⏭️</button>`;
+  const micB = $('#mic'), skB = $('#sk');
+  if (recall){ $('#hint').onclick = () => { stage.querySelector('.lbl')?.classList.remove('hidden'); say([['en', w.en]]); }; }
+  await say(recall ? [['pt','Como se fala em inglês? Toca no microfone!']] : [['pt','Agora fala você! Toca no microfone.']]);
+  let tries = 0, silent = 0;
+  while (alive(ctx.tok)){
+    const which = await Promise.race([tap(micB).then(() => 'mic'), tap(skB).then(() => 'skip')]);
+    if (!alive(ctx.tok)) return;
+    if (which === 'skip'){ hush(); return {spoke:null}; }
+    micB.classList.add('listening'); micB.textContent = '👂';
+    const res = await listen(w);
+    micB.classList.remove('listening'); micB.textContent = '🎤';
+    if (!alive(ctx.tok)) return;
+    if (res.fatal){
+      micBroken = true;
+      act.innerHTML = `<div class="say-hint">Repete comigo!</div><button class="next" id="nx" aria-label="Próximo">➜</button>`;
+      await say([['pt','O microfone não está ligado. Repete comigo:'], ['en', w.en]]);
+      await tap($('#nx')); hush();
+      return {spoke:null};
+    }
+    if (res.ok){
+      micB.classList.add('ok'); sfx.ding(); confetti(60);
+      stage.querySelector('.lbl')?.classList.remove('hidden');
+      await say([['en', rand(['Yes!','Perfect!','Great!','Wow!'])], ['pt','Você falou'], ['en', w.en]]);
+      return {spoke:true};
+    }
+    if (!res.heard.length){
+      silent++;
+      if (silent >= 3){ await say([['pt','Tudo bem! Vamos juntas:'], ['en', w.en]]); return {spoke:null}; }
+      await say([['pt','Não ouvi... Fala bem alto!'], ['en', w.en]]);
+      continue;
+    }
+    tries++;
+    stage.querySelector('.lbl')?.classList.remove('hidden');
+    if (tries >= 2){
+      sfx.ding();
+      await say([['pt','Muito bem! Escuta de novo:'], ['en', w.en]]);
+      return {spoke:'approx'};
+    }
+    await say([['pt','Quase! Escuta:'], ['en', w.en], ['pt','Tenta de novo!']]);
+  }
+}
+
+function tPick(t, ctx){
+  return new Promise(resolve => {
+    const w = t.w, opts = optionsFor(w, t.pool, t.n);
+    const cols = opts.length === 4 ? 2 : opts.length, rows = opts.length === 4 ? 2 : 1;
+    stage.innerHTML = `<div class="prompt"><button class="speaker" id="rep" aria-label="Ouvir de novo">🔊</button></div>
+      <div class="opts" style="--cols:${cols};--rows:${rows}">${opts.map((o, i) => `<button class="opt card" data-i="${i}">${pic(o)}${label(o)}</button>`).join('')}</div>`;
+    const phrase = rand(['Cadê','Onde está','Mostra pra mim:','Toca no']);
+    const ask = () => say([['pt', phrase], ['en', w.en]]);
+    $('#rep').onclick = ask; ask();
+    let wrong = 0, busy = false, finished = false;
+    const btns = [...stage.querySelectorAll('.opt')];
+    const right = btns[opts.indexOf(w)];
+    btns.forEach(b => b.onclick = async () => {
+      if (busy || finished || !alive(ctx.tok)) return;
+      const o = opts[+b.dataset.i];
+      if (o === w){
+        finished = true; b.classList.remove('hint'); b.classList.add('right'); sfx.ding(); if (!wrong) confetti(40);
+        await say([['en', w.en]]); await praise(); await wait(200);
+        resolve({firstTry: wrong === 0});
+      } else {
+        if (b.disabled) return;
+        wrong++; busy = true; b.disabled = true; b.classList.add('wrong', 'shake'); sfx.boop();
+        setTimeout(() => b.classList.remove('shake'), 450);
+        const left = btns.filter(x => !x.disabled).length;
+        if (wrong >= 2 || left <= 1) right.classList.add('hint');
+        await say([['pt','Esse é'], ['en', o.en], ['pt', rand(['Agora, cadê','Procura o','Onde está'])], ['en', w.en]]);
+        busy = false;
+      }
+    });
+  });
+}
+
+function tBubbles(t, ctx){
+  return new Promise(resolve => {
+    const w = t.w, others = optionsFor(w, t.pool, 4).filter(o => o !== w);
+    stage.innerHTML = `<div class="prompt"><button class="speaker" id="rep" aria-label="Ouvir de novo">🔊</button><div class="dots" id="dots"><i></i><i></i><i></i></div></div><div class="pond" id="pond"></div>`;
+    const pond = $('#pond');
+    const ask = () => say([['pt','Estoura as bolhas:'], ['en', w.en]]);
+    $('#rep').onclick = ask; ask();
+    let got = 0, wrong = 0, k = 0, ended = false;
+    const spawn = () => {
+      if (ended || !alive(ctx.tok)) return;
+      const isT = k % 2 === 0 || Math.random() < 0.25; k++;
+      const o = isT ? w : rand(others);
+      const W = pond.clientWidth, H = pond.clientHeight;
+      const size = Math.round(Math.min(170, Math.max(110, W * 0.18)));
+      const b = document.createElement('button');
+      b.className = 'bubble'; b.setAttribute('aria-label', o.en);
+      b.style.cssText = `width:${size}px;height:${size}px;left:${Math.random() * (W - size)}px;--h:${H + 20}px;--ps:${size * 0.55}px;animation-duration:${7 + Math.random() * 2.5}s`;
+      b.innerHTML = `<span class="sway" style="animation-delay:-${Math.random() * 2}s"><span class="in">${pic(o)}</span></span>`;
+      b.onclick = async () => {
+        if (b.dataset.done || ended) return;
+        const inner = b.querySelector('.in');
+        if (o === w){
+          b.dataset.done = 1; b.classList.add('popped'); sfx.pop(); got++;
+          $('#dots').children[got - 1]?.classList.add('on');
+          setTimeout(() => b.remove(), 300);
+          if (got >= 3){
+            ended = true; clearInterval(iv); sfx.ding(); confetti(70);
+            await say([['en', w.en]]); await praise();
+            pond.innerHTML = ''; resolve({firstTry: wrong === 0});
+          } else say([['en', w.en]]);
+        } else {
+          wrong++; sfx.boop(); inner.classList.remove('wob'); void inner.offsetWidth; inner.classList.add('wob');
+          say([['pt','Esse é'], ['en', o.en]]);
+        }
+      };
+      b.addEventListener('animationend', e => { if (e.animationName === 'rise') b.remove(); });
+      pond.appendChild(b);
+    };
+    spawn();
+    const iv = setInterval(spawn, 1300);
+    ctx.cleanup.push(() => { ended = true; clearInterval(iv); });
+  });
+}
+
+function finishLesson(g, errors){
+  const stars = errors <= 1 ? 3 : errors <= 4 ? 2 : 1;
+  const prev = S.done[lessonKey(g)];
+  S.done[lessonKey(g)] = {stars: Math.max(stars, prev ? prev.stars : 0), at: new Date().toISOString()};
+  save();
+  const s = STICKERS[g];
+  stage.innerHTML = `<div class="done">
+    <h2>Parabéns!</h2>
+    <div class="bigstars">${[1,2,3].map(i => `<span class="emo ${i <= stars ? '' : 'off'}" style="animation-delay:${.2 + i * .25}s">⭐</span>`).join('')}</div>
+    <div class="sticker card"><span class="emo">${s[0]}</span><b>${s[1]}</b><small>${prev ? 'figurinha' : 'figurinha nova!'}</small></div>
+    <button class="next" id="nx" aria-label="Voltar para a trilha">➜</button></div>`;
+  sfx.fanfare(); confetti(180);
+  (async () => {
+    await say([['pt','Parabéns, Cecília!'], ['en','You did it!']]);
+    await say([['pt', prev ? 'Olha a sua figurinha:' : 'Você ganhou uma figurinha:'], ['en', s[1]]]);
+  })();
+  $('#nx').onclick = () => { hush(); renderMap(); };
+  stage.querySelector('.sticker').onclick = () => say([['en', s[1]]]);
+}
+
+/* ================= PARENT AREA ================= */
+function openParent(){
+  hush();
+  const o = document.createElement('div'); o.className = 'overlay';
+  document.body.appendChild(o);
+  const render = () => {
+    const learned = ALLW.filter(w => ['learn','master'].includes(wordState(w))).length;
+    const mastered = ALLW.filter(w => wordState(w) === 'master').length;
+    const weak = ALLW.filter(w => wordState(w) === 'weak');
+    const st = S.settings;
+    const micStatus = !SR ? 'Este navegador não reconhece fala. Use o Safari do iPad.' : micBroken ? 'O microfone foi bloqueado. Libere em Ajustes › Safari › Microfone e recarregue a página.' : 'Disponível.';
+    const rows = WORLDS.map(wd => `<div class="wrow"><span class="wn">${wd.name}</span>${wd.words.map(w => {
+      const s = S.words[w.en], ws = wordState(w);
+      const tip = s ? `${s.ok} acertos de primeira, ${s.miss} com ajuda` : 'ainda não viu';
+      return `<span class="chip ${ws}" title="${tip}">${w.en} · ${w.pt}${s && s.miss ? ` (${s.miss}✗)` : ''}</span>`; }).join('')}</div>`).join('');
+    o.innerHTML = `<div class="parent card">
+      <button class="close" id="pc" aria-label="Fechar">✕</button>
+      <h2>Área dos pais</h2>
+      <p>Cada lição apresenta 3 palavras novas: ela vê a figura, ouve a palavra, tenta falar e depois acha a figura certa entre outras. Quando erra, o app diz o nome do que ela tocou, repete o pedido e acende a resposta certa no segundo erro. A palavra errada volta 3 telas depois (até 2 vezes na lição) e reaparece no começo das próximas lições até ela acertar de primeira.</p>
+      <div class="sum">
+        <div><b>${Object.keys(S.done).length}/${TOTAL}</b>lições</div>
+        <div><b>${learned}/${ALLW.length}</b>palavras vistas</div>
+        <div><b>${mastered}</b>dominadas</div>
+        <div><b>${weak.length}</b>em reforço</div>
+      </div>
+      <h3>Palavras</h3>
+      <div class="legend"><span class="chip">não viu</span><span class="chip learn">aprendendo</span><span class="chip weak">em reforço</span><span class="chip master">dominada (3 acertos seguidos)</span></div>
+      ${rows}
+      <h3>Ajustes</h3>
+      <div class="setting"><span>Microfone (ela fala a palavra)<small class="status">${micStatus}</small></span><span style="display:flex;gap:8px"><button class="btn" id="mt">Testar</button><button class="btn ${st.mic ? 'on' : ''}" id="sm">${st.mic ? 'Ligado' : 'Desligado'}</button></span></div>
+      <div class="setting"><span>Mostrar a palavra escrita<small>Ajuda a associar a escrita, mesmo antes de ler.</small></span><button class="btn ${st.showText ? 'on' : ''}" id="sw">${st.showText ? 'Sim' : 'Não'}</button></div>
+      <div class="setting"><span>Voz em inglês mais devagar</span><span style="display:flex;gap:8px"><button class="btn" id="vt">Ouvir</button><button class="btn ${st.slow ? 'on' : ''}" id="ss">${st.slow ? 'Devagar' : 'Normal'}</button></span></div>
+      <div class="setting"><span>Liberar todas as lições<small>Para vocês explorarem. Ela continua com a trilha em ordem.</small></span><button class="btn ${st.unlockAll ? 'on' : ''}" id="su">${st.unlockAll ? 'Liberado' : 'Em ordem'}</button></div>
+      <div class="setting"><span>Zerar o progresso<small>Apaga lições, estrelas e figurinhas deste iPad.</small></span><button class="btn danger" id="rz">Zerar</button></div>
+      <p style="opacity:.65;margin-top:14px">Voz: ${VO.en ? VO.en.name : 'padrão'} (inglês) · ${VO.pt ? VO.pt.name : 'padrão'} (português). Vozes "aprimoradas" ficam em Ajustes › Acessibilidade › Conteúdo Falado › Vozes.</p>
+    </div>`;
+    o.querySelector('#pc').onclick = () => { o.remove(); if (screen === 'map') renderMap(); };
+    o.querySelector('#sm').onclick = () => { st.mic = !st.mic; micBroken = false; save(); render(); };
+    o.querySelector('#sw').onclick = () => { st.showText = !st.showText; save(); render(); };
+    o.querySelector('#ss').onclick = () => { st.slow = !st.slow; save(); render(); };
+    o.querySelector('#su').onclick = () => { st.unlockAll = !st.unlockAll; save(); render(); };
+    o.querySelector('#vt').onclick = () => say([['en','Hello Cecília! This is a cat.'], ['pt','Olá! Esta é a voz em português.']]);
+    o.querySelector('#mt').onclick = async e => {
+      const b = e.currentTarget; b.textContent = 'Fale "dog"…';
+      micBroken = false;
+      const r = await listen(ALLW[0]);
+      b.textContent = r.fatal ? 'Bloqueado' : r.ok ? 'Ouvi "dog"!' : r.heard.length ? `Ouvi "${r.heard[0]}"` : 'Não ouvi nada';
+    };
+    o.querySelector('#rz').onclick = e => {
+      const b = e.currentTarget;
+      if (b.dataset.sure){ S = defaults(); save(); render(); return; }
+      b.dataset.sure = 1; b.textContent = 'Tocar de novo para confirmar';
+    };
+  };
+  render();
+}
+
+/* ================= HOME SCREEN ICON ================= */
+try {
+  const c = document.createElement('canvas'); c.width = c.height = 180;
+  const x = c.getContext('2d');
+  const gr = x.createLinearGradient(0, 0, 0, 180); gr.addColorStop(0, '#9ad8f5'); gr.addColorStop(1, '#eaf7ff');
+  x.fillStyle = gr; x.fillRect(0, 0, 180, 180);
+  x.font = '120px "Apple Color Emoji","Segoe UI Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText('🐰', 90, 100);
+  $('#touchicon').href = c.toDataURL('image/png');
+} catch (e) {}
+
+renderSplash();
+</script>
+</body>
+</html>
