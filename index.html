@@ -194,6 +194,16 @@ button:focus-visible{outline:4px solid var(--ink);outline-offset:4px}
 
 canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:30}
 
+.momtip{display:flex;align-items:center;gap:10px;align-self:center;max-width:min(100%,760px);margin-bottom:4px;
+  background:rgba(255,250,240,.85);border-radius:16px;padding:6px 16px;font-size:clamp(15px,2.2vmin,19px);font-weight:500;line-height:1.3;
+  -webkit-user-select:text;user-select:text}
+.momtip[hidden]{display:none}
+.momtip .emo{font-size:24px;flex:none}
+.momtip b{font-weight:800}
+.next.small{width:84px;height:84px;font-size:44px;animation:none;opacity:.9}
+.mission{background:rgba(255,250,240,.9);border-radius:20px;padding:12px 20px;max-width:560px;font-size:18px;line-height:1.4;font-weight:500;text-align:left}
+.mission b{display:block;font-size:14px;letter-spacing:.06em;text-transform:uppercase;opacity:.6;margin-bottom:2px}
+.blob{border:.025em solid rgba(38,48,66,.22)}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
 @keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
 @keyframes yay{0%{transform:scale(1)}40%{transform:scale(1.12) rotate(-3deg)}100%{transform:scale(1)}}
@@ -214,90 +224,181 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:30}
 <canvas id="fx"></canvas>
 <script>
 "use strict";
-/* ================= CONTENT ================= */
+/* ================= CONTENT =================
+   Cada mundo tem 9 palavras: 3 lições de 3 palavras novas + 1 revisão (🎁).
+   `home` é a missão fora da tela para a mãe fazer com ela. */
 const WORLDS = [
- {id:'animals', name:'Animais', icon:'🐶', color:'#ffb347', words:[
+ {id:'animals', name:'Animais', icon:'🐶', color:'#ffb347', home:'Brinquem de imitar: você diz "dog!" e ela faz au-au. Depois troquem: ela imita e você adivinha em inglês.', words:[
   {en:'dog', pt:'cachorro', e:'🐶', alias:['dug','doug','dag','dogs','doggy']},
   {en:'cat', pt:'gato', e:'🐱', alias:['cut','kat','cats','kit','kitty']},
   {en:'fish', pt:'peixe', e:'🐟', alias:['fist','fiss','fishy']},
   {en:'bird', pt:'pássaro', e:'🐦', alias:['bert','burt','bud','word','birdie']},
   {en:'cow', pt:'vaca', e:'🐮', alias:['cal','kal','how','ciao','kow']},
-  {en:'duck', pt:'pato', e:'🦆', alias:['dark','doc','dock','ducky']}]},
- {id:'colors', name:'Cores', icon:'🎨', color:'#c99bff', words:[
+  {en:'duck', pt:'pato', e:'🦆', alias:['dark','doc','dock','ducky']},
+  {en:'horse', pt:'cavalo', e:'🐴', alias:['hors','house','horsey','force']},
+  {en:'pig', pt:'porco', e:'🐷', alias:['big','peg','pick','piggy']},
+  {en:'rabbit', pt:'coelho', e:'🐰', alias:['rabbits','robot','rabid','bunny']}]},
+ {id:'colors', name:'Cores', icon:'🎨', color:'#c99bff', home:'Caça às cores: diga "Find something red!" e ela procura algo vermelho pela casa.', words:[
   {en:'red', pt:'vermelho', c:'#e53935', alias:['read','ret','rad','rid']},
   {en:'blue', pt:'azul', c:'#1e88e5', alias:['blew','bloo','glue','blu']},
   {en:'yellow', pt:'amarelo', c:'#fdd835', alias:['hello','jello','yell','yello']},
   {en:'green', pt:'verde', c:'#43a047', alias:['grin','queen','grain','greene']},
   {en:'pink', pt:'rosa', c:'#f06fab', alias:['peak','ping','think','pinky']},
-  {en:'purple', pt:'roxo', c:'#8e44ad', alias:['people','pupil','purpel']}]},
- {id:'fruits', name:'Frutas', icon:'🍎', color:'#ff8a80', words:[
+  {en:'purple', pt:'roxo', c:'#8e44ad', alias:['people','pupil','purpel']},
+  {en:'black', pt:'preto', c:'#222831', alias:['blak','block','back','plaque']},
+  {en:'white', pt:'branco', c:'#ffffff', alias:['wait','why','wide','weight']},
+  {en:'brown', pt:'marrom', c:'#8d5a2b', alias:['brow','bra','round','crown']}]},
+ {id:'fruits', name:'Frutas', icon:'🍎', color:'#ff8a80', home:'Na cozinha ou no mercado, aponte uma fruta e pergunte "What is this?".', words:[
   {en:'apple', pt:'maçã', e:'🍎', alias:['apples','happy','apel']},
   {en:'banana', pt:'banana', e:'🍌', alias:['bananas','nana']},
   {en:'grapes', pt:'uvas', e:'🍇', alias:['grape','graves','crepes','great']},
   {en:'orange', pt:'laranja', e:'🍊', alias:['oranges','orang','arranged']},
   {en:'strawberry', pt:'morango', e:'🍓', alias:['strawberries','straw berry']},
-  {en:'watermelon', pt:'melancia', e:'🍉', alias:['water melon','watermelons']}]},
- {id:'numbers', name:'Números', icon:'🔢', color:'#7fd3c3', words:[
-  {en:'one', pt:'um', n:1, e:'🐞', alias:['1','won','juan','on']},
-  {en:'two', pt:'dois', n:2, e:'🐞', alias:['2','to','too','tu','do']},
-  {en:'three', pt:'três', n:3, e:'🐞', alias:['3','tree','free','tray']},
-  {en:'four', pt:'quatro', n:4, e:'🐞', alias:['4','for','far','fore','floor']},
-  {en:'five', pt:'cinco', n:5, e:'🐞', alias:['5','fife','fight','fine']},
-  {en:'six', pt:'seis', n:6, e:'🐞', alias:['6','sis','sick','sits','sex']}]},
- {id:'family', name:'Família', icon:'🏠', color:'#ffcf5c', words:[
+  {en:'watermelon', pt:'melancia', e:'🍉', alias:['water melon','watermelons']},
+  {en:'pineapple', pt:'abacaxi', e:'🍍', alias:['pine apple','pineapples']},
+  {en:'lemon', pt:'limão', e:'🍋', alias:['lemons','lemmon','lemma']},
+  {en:'cherry', pt:'cereja', e:'🍒', alias:['cherries','sherry','jerry','chery']}]},
+ {id:'numbers', name:'Números', icon:'🔢', color:'#7fd3c3', home:'Contem juntas em inglês: degraus da escada, brinquedos, dedinhos. "One, two, three…"', words:[
+  {en:'one', pt:'um', n:1, alias:['1','won','juan','on']},
+  {en:'two', pt:'dois', n:2, alias:['2','to','too','tu','do']},
+  {en:'three', pt:'três', n:3, alias:['3','tree','free','tray']},
+  {en:'four', pt:'quatro', n:4, alias:['4','for','far','fore','floor']},
+  {en:'five', pt:'cinco', n:5, alias:['5','fife','fight','fine']},
+  {en:'six', pt:'seis', n:6, alias:['6','sis','sick','sits']},
+  {en:'seven', pt:'sete', n:7, alias:['7','heaven','seben','sevin']},
+  {en:'eight', pt:'oito', n:8, alias:['8','ate','eat','hate','aid']},
+  {en:'nine', pt:'nove', n:9, alias:['9','nein','night','line','mine']}]},
+ {id:'family', name:'Família', icon:'🏠', color:'#ffcf5c', home:'Mostre fotos da família e pergunte "Who is this?". Mom! Dad! Brother! (o Lorenzo!)', words:[
   {en:'mom', pt:'mamãe', e:'👩', alias:['mum','mama','mommy','mon','mam','mother']},
   {en:'dad', pt:'papai', e:'👨', alias:['daddy','that','dead','dada','dat','father']},
   {en:'baby', pt:'bebê', e:'👶', alias:['babe','bebe','maybe','bay be']},
   {en:'brother', pt:'irmão', e:'👦', alias:['brothers','bother','brotha']},
   {en:'sister', pt:'irmã', e:'👧', alias:['sisters','sista','cister']},
-  {en:'grandma', pt:'vovó', e:'👵', alias:['grandmother','granma','grammar','granny','grandmom']}]},
- {id:'body', name:'Corpo', icon:'👃', color:'#ff9fc4', words:[
-  {en:'eyes', pt:'olhos', e:'👀', alias:['eye','ice','eyes','i s']},
+  {en:'grandma', pt:'vovó', e:'👵', alias:['grandmother','granma','grammar','granny','grandmom']},
+  {en:'grandpa', pt:'vovô', e:'👴', alias:['grandfather','granpa','grampa','grandpop']},
+  {en:'friend', pt:'amigo', e:'🧑‍🤝‍🧑', alias:['friends','fren','french','friendly']},
+  {en:'family', pt:'família', e:'👨‍👩‍👧‍👦', alias:['familia','families','famly']}]},
+ {id:'body', name:'Corpo', icon:'👃', color:'#ff9fc4', home:'Brinquem de "Touch your nose!": você fala a parte do corpo e ela toca.', words:[
+  {en:'eyes', pt:'olhos', e:'👀', alias:['eye','ice','eyes']},
   {en:'nose', pt:'nariz', e:'👃', alias:['knows','no','nos','noes']},
   {en:'mouth', pt:'boca', e:'👄', alias:['mouse','mount','mouf','mouths']},
   {en:'hand', pt:'mão', e:'✋', alias:['and','hen','hands','han']},
   {en:'foot', pt:'pé', e:'🦶', alias:['food','foo','put','fut','feet']},
-  {en:'ear', pt:'orelha', e:'👂', alias:['here','year','hear','beer','ears']}]},
- {id:'toys', name:'Brinquedos', icon:'🧸', color:'#8fb8ff', words:[
+  {en:'ear', pt:'orelha', e:'👂', alias:['here','year','hear','beer','ears']},
+  {en:'leg', pt:'perna', e:'🦵', alias:['legs','lake','lag','lack']},
+  {en:'arm', pt:'braço', e:'💪', alias:['arms','harm','um','alarm']},
+  {en:'tooth', pt:'dente', e:'🦷', alias:['teeth','truth','tool','tooth']}]},
+ {id:'toys', name:'Brinquedos', icon:'🧸', color:'#8fb8ff', home:'Na hora de guardar os brinquedos: "Give me the ball!", "Give me the book!".', words:[
   {en:'ball', pt:'bola', e:'⚽', alias:['bowl','bow','all','paul','balls']},
-  {en:'car', pt:'carro', e:'🚗', alias:['call','card','core','cars','car']},
   {en:'book', pt:'livro', e:'📖', alias:['look','buk','books','took']},
-  {en:'teddy bear', pt:'ursinho', e:'🧸', alias:['teddy','teddybear','teddy bare','bear']},
+  {en:'teddy bear', pt:'ursinho', e:'🧸', alias:['teddy','teddybear','teddy bare']},
   {en:'balloon', pt:'balão', e:'🎈', alias:['baloon','balloons','ballon']},
-  {en:'train', pt:'trem', e:'🚂', alias:['trains','trane','tray']}]},
- {id:'food', name:'Comidinhas', icon:'🍪', color:'#e9b07a', words:[
+  {en:'kite', pt:'pipa', e:'🪁', alias:['kites','kate','night','kid']},
+  {en:'drum', pt:'tambor', e:'🥁', alias:['drums','drama','dram','strum']},
+  {en:'puzzle', pt:'quebra-cabeça', e:'🧩', alias:['puzzles','pazel','puzel']},
+  {en:'robot', pt:'robô', e:'🤖', alias:['robots','rowboat','robo']},
+  {en:'blocks', pt:'blocos', e:'🧱', alias:['block','blox','clocks','black']}]},
+ {id:'food', name:'Comidinhas', icon:'🍪', color:'#e9b07a', home:'Nas refeições, nomeiem tudo em inglês: "Milk, please!", "Bread, please!".', words:[
   {en:'milk', pt:'leite', e:'🥛', alias:['meal','mook','milky','melk']},
   {en:'water', pt:'água', e:'💧', alias:['wata','order','what are','waiter','wader']},
   {en:'bread', pt:'pão', e:'🍞', alias:['bred','bed','brad']},
   {en:'cake', pt:'bolo', e:'🎂', alias:['kate','cak','take','cakes']},
   {en:'ice cream', pt:'sorvete', e:'🍦', alias:['icecream','i scream','ice-cream']},
-  {en:'cookie', pt:'biscoito', e:'🍪', alias:['cookies','cooky','kooky']}]},
- {id:'nature', name:'Natureza', icon:'🌳', color:'#8bd17c', words:[
+  {en:'cookie', pt:'biscoito', e:'🍪', alias:['cookies','cooky','kooky']},
+  {en:'egg', pt:'ovo', e:'🥚', alias:['eggs','egg','ag','ache']},
+  {en:'cheese', pt:'queijo', e:'🧀', alias:['chees','chase','cheeses','she is']},
+  {en:'pizza', pt:'pizza', e:'🍕', alias:['pizzas','peter','pisa','piece of']}]},
+ {id:'clothes', name:'Roupas', icon:'👗', color:'#f7a6d6', home:'Ao vestir: "Shoes on!", "Hat on!". Deixe ela escolher: "Socks or shoes?".', words:[
+  {en:'shirt', pt:'camiseta', e:'👕', alias:['shirts','short','shit','sure']},
+  {en:'pants', pt:'calça', e:'👖', alias:['pant','pens','paints','pans']},
+  {en:'dress', pt:'vestido', e:'👗', alias:['dresses','dres','press','address']},
+  {en:'shoes', pt:'sapatos', e:'👟', alias:['shoe','choose','shows','juice']},
+  {en:'hat', pt:'chapéu', e:'👒', alias:['hut','had','hats','head']},
+  {en:'socks', pt:'meias', e:'🧦', alias:['sock','sucks','sacks','sox']},
+  {en:'coat', pt:'casaco', e:'🧥', alias:['coats','cold','code','goat']},
+  {en:'glasses', pt:'óculos', e:'👓', alias:['glass','classes','grasses']},
+  {en:'backpack', pt:'mochila', e:'🎒', alias:['back pack','backpacks','bag']}]},
+ {id:'vehicles', name:'Veículos', icon:'🚌', color:'#ffd23f', home:'Na rua ou no carro: "Look, a bus!". Ela aponta e repete o nome.', words:[
+  {en:'car', pt:'carro', e:'🚗', alias:['call','card','core','cars']},
+  {en:'bus', pt:'ônibus', e:'🚌', alias:['bass','boss','buzz','bust','buses']},
+  {en:'truck', pt:'caminhão', e:'🚚', alias:['track','trucks','truk','drug']},
+  {en:'bike', pt:'bicicleta', e:'🚲', alias:['bikes','back','bite','bicycle']},
+  {en:'plane', pt:'avião', e:'✈️', alias:['plain','planes','airplane','plan']},
+  {en:'boat', pt:'barco', e:'⛵', alias:['boats','both','vote','bought']},
+  {en:'train', pt:'trem', e:'🚂', alias:['trains','trane','tray']},
+  {en:'helicopter', pt:'helicóptero', e:'🚁', alias:['helicopters','copter','helicopta']},
+  {en:'motorcycle', pt:'moto', e:'🏍️', alias:['motor cycle','motorbike','motorcycles']}]},
+ {id:'nature', name:'Natureza', icon:'🌳', color:'#8bd17c', home:'Na janela ou no passeio: "Look! The sun!", "A tree!", "A flower!".', words:[
   {en:'sun', pt:'sol', e:'☀️', alias:['son','some','sum','sunny']},
   {en:'moon', pt:'lua', e:'🌙', alias:['noon','mun','moo']},
   {en:'star', pt:'estrela', e:'⭐', alias:['stars','start','store','stuff']},
   {en:'tree', pt:'árvore', e:'🌳', alias:['three','free','trees','tea']},
   {en:'flower', pt:'flor', e:'🌸', alias:['flour','flowers','flor']},
-  {en:'rain', pt:'chuva', e:'🌧️', alias:['ran','rainy','train','rein']}]},
+  {en:'rain', pt:'chuva', e:'🌧️', alias:['ran','rainy','train','rein']},
+  {en:'cloud', pt:'nuvem', e:'☁️', alias:['clouds','clown','loud','crowd']},
+  {en:'rainbow', pt:'arco-íris', e:'🌈', alias:['rain bow','rainbows','rambo']},
+  {en:'snow', pt:'neve', e:'❄️', alias:['know','no','slow','snowy']}]},
+ {id:'house', name:'Casa', icon:'🛏️', color:'#b9a4f5', home:'Passeio pela casa: "Where is the door?", "Where is your bed?". Ela leva você até lá.', words:[
+  {en:'bed', pt:'cama', e:'🛏️', alias:['bad','bet','bread','beds']},
+  {en:'chair', pt:'cadeira', e:'🪑', alias:['chairs','share','cher','char']},
+  {en:'door', pt:'porta', e:'🚪', alias:['doors','dore','tour','four']},
+  {en:'window', pt:'janela', e:'🪟', alias:['windows','windo','winter']},
+  {en:'bath', pt:'banho', e:'🛁', alias:['bat','path','bus','baths']},
+  {en:'light', pt:'luz', e:'💡', alias:['lights','like','right','lite']},
+  {en:'TV', pt:'televisão', e:'📺', alias:['tv','t v','tee vee','tivi']},
+  {en:'phone', pt:'telefone', e:'📱', alias:['phones','fun','foam','fone']},
+  {en:'key', pt:'chave', e:'🔑', alias:['keys','kee','he','tea']}]},
+ {id:'zoo', name:'Zoológico', icon:'🦁', color:'#f4b860', home:'Imitem bichos do zoológico: você imita e ela fala o nome em inglês. Roar!', words:[
+  {en:'lion', pt:'leão', e:'🦁', alias:['lions','line','lyon','leon']},
+  {en:'elephant', pt:'elefante', e:'🐘', alias:['elephants','elefant','elefante']},
+  {en:'monkey', pt:'macaco', e:'🐵', alias:['monkeys','monkee','donkey']},
+  {en:'giraffe', pt:'girafa', e:'🦒', alias:['giraffes','giraf','draft']},
+  {en:'tiger', pt:'tigre', e:'🐯', alias:['tigers','tigger','tiga']},
+  {en:'bear', pt:'urso', e:'🐻', alias:['bare','bears','beer','pear']},
+  {en:'zebra', pt:'zebra', e:'🦓', alias:['zebras','zibra','debra']},
+  {en:'snake', pt:'cobra', e:'🐍', alias:['snakes','snack','steak','sneak']},
+  {en:'penguin', pt:'pinguim', e:'🐧', alias:['penguins','pinguin','pengwin']}]},
+ {id:'little', name:'Bichinhos', icon:'🐞', color:'#ff8f6b', home:'No jardim ou num livro, procurem juntas: "Where is the butterfly?", "A bee!".', words:[
+  {en:'butterfly', pt:'borboleta', e:'🦋', alias:['butterflies','butter fly','buterfly']},
+  {en:'bee', pt:'abelha', e:'🐝', alias:['be','b','bees','pee']},
+  {en:'ladybug', pt:'joaninha', e:'🐞', alias:['lady bug','ladybugs','ladybird']},
+  {en:'snail', pt:'caracol', e:'🐌', alias:['snails','nail','snell','sale']},
+  {en:'frog', pt:'sapo', e:'🐸', alias:['frogs','fog','frock','frag']},
+  {en:'turtle', pt:'tartaruga', e:'🐢', alias:['turtles','tertle','turtel']},
+  {en:'whale', pt:'baleia', e:'🐳', alias:['whales','well','wail','way']},
+  {en:'octopus', pt:'polvo', e:'🐙', alias:['octopuses','octopi','octo pus']},
+  {en:'crab', pt:'caranguejo', e:'🦀', alias:['crabs','grab','crap','crib']}]},
+ {id:'feelings', name:'Sentimentos', icon:'😀', color:'#ffc94d', home:'Caretas no espelho: você diz "Happy!", "Sad!", "Surprised!" e ela faz a cara.', words:[
+  {en:'happy', pt:'feliz', e:'😀', alias:['hapi','happen','hippie','apy']},
+  {en:'sad', pt:'triste', e:'😢', alias:['said','sat','set','side']},
+  {en:'angry', pt:'bravo', e:'😠', alias:['angri','hungry','angery']},
+  {en:'sleepy', pt:'com sono', e:'😴', alias:['sleep','slippy','sleepie']},
+  {en:'scared', pt:'com medo', e:'😨', alias:['scare','scarred','skirt','scary']},
+  {en:'surprised', pt:'surpresa', e:'😮', alias:['surprise','suprised','surprize']},
+  {en:'hot', pt:'calor', e:'🥵', alias:['hut','hat','hold','what']},
+  {en:'cold', pt:'frio', e:'🥶', alias:['called','cool','gold','code']},
+  {en:'silly', pt:'bobinha', e:'🤪', alias:['sily','seely','celery','really']}]},
 ];
 const STICKERS = [
- ['🦄','unicorn','unicórnio'],['🌈','rainbow','arco-íris'],['🦋','butterfly','borboleta'],
- ['🐬','dolphin','golfinho'],['🍭','lollipop','pirulito'],['👑','crown','coroa'],
- ['🐢','turtle','tartaruga'],['🦖','dinosaur','dinossauro'],['🐙','octopus','polvo'],
- ['🐧','penguin','pinguim'],['🦁','lion','leão'],['🐼','panda','panda'],
- ['🐸','frog','sapo'],['🧁','cupcake','bolinho'],['🌻','sunflower','girassol'],
- ['🐞','ladybug','joaninha'],['🐳','whale','baleia'],['🐵','monkey','macaco'],
- ['🐯','tiger','tigre'],['🐘','elephant','elefante'],['🦒','giraffe','girafa'],
- ['🐨','koala','coala'],['🏰','castle','castelo'],['🧚','fairy','fada'],
- ['🧜‍♀️','mermaid','sereia'],['👸','princess','princesa'],['🚀','rocket','foguete'],
+ ['🦄','unicorn'],['🐬','dolphin'],['🍭','lollipop'],['👑','crown'],['🦖','dinosaur'],['🐼','panda'],
+ ['🧁','cupcake'],['🌻','sunflower'],['🐨','koala'],['🏰','castle'],['🧚','fairy'],['🧜‍♀️','mermaid'],
+ ['👸','princess'],['🚀','rocket'],['🐉','dragon'],['🦊','fox'],['🦉','owl'],['🦜','parrot'],
+ ['🦩','flamingo'],['🦚','peacock'],['🦔','hedgehog'],['🦥','sloth'],['🦦','otter'],['🦘','kangaroo'],
+ ['🦛','hippo'],['🐫','camel'],['🦙','llama'],['🐭','mouse'],['🐹','hamster'],['🐺','wolf'],
+ ['🐿️','squirrel'],['🦭','seal'],['🦈','shark'],['🦢','swan'],['🎁','gift'],['🏆','trophy'],
+ ['🏅','medal'],['🎸','guitar'],['🎺','trumpet'],['🖍️','crayon'],['🪄','magic wand'],['🍬','candy'],
+ ['🍩','doughnut'],['🍿','popcorn'],['🥕','carrot'],['🌽','corn'],['🍄','mushroom'],['🌵','cactus'],
+ ['🌴','palm tree'],['⛄','snowman'],['☂️','umbrella'],['🎆','fireworks'],['⛺','tent'],['🎡','ferris wheel'],
+ ['🎠','carousel'],['🔮','crystal ball'],['🐔','chicken'],['🐑','sheep'],['🐐','goat'],['🎹','piano'],
 ];
-const LESSONS_PER_WORLD = 3;
-const TOTAL = WORLDS.length * LESSONS_PER_WORLD;
+const LPW = 4; // lições por mundo
+const TOTAL = WORLDS.length * LPW;
 const ALLW = WORLDS.flatMap(w => w.words);
+const COUNT_EMOJI = '🐥';
 
 /* ================= STATE ================= */
-const KEY = 'cecilia-english-v1';
-const defaults = () => ({done:{}, words:{}, settings:{mic:true, showText:true, slow:true, unlockAll:false}});
+const KEY = 'cecilia-english-v2';
+const defaults = () => ({done:{}, words:{}, settings:{mic:true, showText:true, tips:true, slow:true, unlockAll:false}});
 let S = (() => {
   try {
     const s = JSON.parse(localStorage.getItem(KEY));
@@ -319,7 +420,7 @@ function wordState(w){
   if (s.miss > 0 && s.streak < 2) return 'weak';
   return 'learn';
 }
-const lessonKey = g => WORLDS[Math.floor(g/3)].id + '-' + (g % 3);
+const lessonKey = g => WORLDS[Math.floor(g / LPW)].id + '-' + (g % LPW);
 const isDone = g => !!S.done[lessonKey(g)];
 function currentIndex(){ for (let g = 0; g < TOTAL; g++) if (!isDone(g)) return g; return TOTAL; }
 
@@ -331,55 +432,59 @@ const rand = a => a[Math.floor(Math.random() * a.length)];
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const tap = el => new Promise(r => el.addEventListener('click', r, {once:true}));
 const worldOf = w => WORLDS.find(wd => wd.words.includes(w));
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 function pic(w){
   if (w.c) return `<span class="pic"><span class="blob" style="--c:${w.c}"></span></span>`;
   if (w.n){
     const k = w.n <= 3 ? w.n : w.n === 4 ? 2 : 3;
-    const fs = {1:.82, 2:.46, 3:.34, 4:.4, 5:.32, 6:.32}[w.n];
-    return `<span class="pic"><span class="count" style="--k:${k};font-size:${fs}em">${`<span class="emo">${w.e}</span>`.repeat(w.n)}</span></span>`;
+    const fs = {1:.82, 2:.46, 3:.34, 4:.4, 5:.32, 6:.32, 7:.28, 8:.28, 9:.28}[w.n];
+    return `<span class="pic"><span class="count" style="--k:${k};font-size:${fs}em">${`<span class="emo">${COUNT_EMOJI}</span>`.repeat(w.n)}</span></span>`;
   }
   return `<span class="pic"><span class="emo">${w.e}</span></span>`;
 }
+// pergunta natural em inglês para a mãe fazer
+const PLURAL = new Set(['eyes','grapes','pants','shoes','socks','glasses','blocks']);
+const NO_ART = new Set(['mom','dad','grandma','grandpa']);
+function noun(w){
+  const wid = worldOf(w).id;
+  if (wid === 'colors' || wid === 'numbers' || NO_ART.has(w.en)) return w.en;
+  return 'the ' + w.en;
+}
+function whereQ(w){
+  if (worldOf(w).id === 'feelings') return `Who is ${w.en}?`;
+  return `Where ${PLURAL.has(w.en) ? 'are' : 'is'} ${noun(w)}?`;
+}
 const label = (w, cls = '') => S.settings.showText ? `<span class="lbl ${cls}">${w.en}</span>` : '';
 
-/* ================= VOICE ================= */
-const VO = {en:null, pt:null};
+/* ================= VOICE =================
+   Áudio gravado (Google Chirp 3 HD, gerado por tools/gerar-audios.mjs):
+   cada fala vira audio/<lang>_<slug>.mp3. Sem o arquivo, usa a voz do iPad. */
+const VO = {en:null};
 const BAD = /compact|eloquence|grandma|grandpa|rocko|shelley|flo\b|reed|sandy|eddy|bad news|bells|boing|bubbles|cellos|jester|organ|superstar|trinoids|whisper|wobble|zarvox|albert|fred|junior|ralph|kathy|good news|hysterical/i;
-function bestVoice(vs, lang, names){
-  let best = null, bs = -1;
+function pickVoices(){
+  const vs = speechSynthesis.getVoices(); let best = null, bs = -1;
   for (const v of vs){
-    const l = (v.lang || '').replace('_','-').toLowerCase();
-    if (!l.startsWith(lang)) continue;
+    if (!(v.lang || '').replace('_','-').toLowerCase().startsWith('en-us')) continue;
     let s = 10;
     if (/enhanced|premium|neural|natural/i.test(v.name)) s += 3;
-    names.forEach((n, i) => { if (v.name.includes(n)) s += 9 - i; });
+    ['Samantha','Ava','Allison','Susan','Nicky','Zoe','Google US English'].forEach((n, i) => { if (v.name.includes(n)) s += 9 - i; });
     if (BAD.test(v.name)) s -= 12;
     if (s > bs){ bs = s; best = v; }
   }
-  return best;
-}
-function pickVoices(){
-  const vs = speechSynthesis.getVoices();
-  if (!vs.length) return;
-  VO.en = bestVoice(vs, 'en-us', ['Samantha','Ava','Allison','Susan','Nicky','Zoe','Google US English']) || bestVoice(vs, 'en', ['Karen','Moira','Serena']);
-  VO.pt = bestVoice(vs, 'pt-br', ['Luciana','Fernanda','Google português do Brasil','Felipe']) || bestVoice(vs, 'pt', []);
+  VO.en = best;
 }
 if ('speechSynthesis' in window){ pickVoices(); speechSynthesis.onvoiceschanged = pickVoices; }
 
-/* Áudio gravado (Google Chirp 3 HD, gerado por tools/gerar-audios.mjs).
-   Cada fala vira audio/<lang>_<slug>.mp3; sem o arquivo, cai na voz do iPad. */
 const slug = t => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 const clipName = (lang, text) => lang + '_' + slug(text);
 const CLIPS = {};
-let clipNow = null, clipCount = 0;
-let clipsReady = Promise.resolve();
-const loadClips = async () => {
+let clipNow = null, clipCount = 0, clipsReady = Promise.resolve();
+async function loadClips(){
   try {
     const a = actx(true); if (!a) return;
     const r = await fetch('audio/manifest.json', {cache:'no-cache'}); if (!r.ok) return;
-    const names = (await r.json()).clips || [];
-    const queue = names.slice();
+    const queue = ((await r.json()).clips || []).slice();
     const worker = async () => {
       while (queue.length){
         const n = queue.shift();
@@ -392,14 +497,13 @@ const loadClips = async () => {
     };
     await Promise.all([1,2,3,4,5,6].map(worker));
   } catch (e) {}
-};
+}
 function stopClip(){ if (clipNow){ try { clipNow.onended = null; clipNow.stop(); } catch (e) {} clipNow = null; } }
 function playClip(buf){
   return new Promise(res => {
     const a = actx(); if (!a) return res();
-    const s = a.createBufferSource(), g = a.createGain();
-    s.buffer = buf; g.gain.value = 1;
-    s.connect(g).connect(a.destination);
+    const s = a.createBufferSource();
+    s.buffer = buf; s.connect(a.destination);
     let done = false;
     const fin = () => { if (!done){ done = true; clearTimeout(t); if (clipNow === s) clipNow = null; res(); } };
     s.onended = fin;
@@ -407,7 +511,6 @@ function playClip(buf){
     clipNow = s; s.start();
   });
 }
-
 let sayId = 0;
 function utter(text, lang){
   const clip = CLIPS[clipName(lang, text)];
@@ -415,10 +518,8 @@ function utter(text, lang){
   return new Promise(res => {
     if (!('speechSynthesis' in window)) return res();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang === 'en' ? 'en-US' : 'pt-BR';
-    const v = VO[lang]; if (v) u.voice = v;
-    u.rate = lang === 'en' ? (S.settings.slow ? 0.78 : 0.95) : 1.0;
-    u.pitch = 1.08;
+    u.lang = 'en-US'; if (VO.en) u.voice = VO.en;
+    u.rate = S.settings.slow ? 0.78 : 0.95; u.pitch = 1.08;
     let done = false;
     const fin = () => { if (!done){ done = true; clearTimeout(t); res(); } };
     u.onend = fin; u.onerror = fin;
@@ -436,11 +537,7 @@ async function say(parts){
   }
 }
 function hush(){ sayId++; stopClip(); try { speechSynthesis.cancel(); } catch (e) {} }
-async function praise(){
-  const r = Math.random();
-  if (r < 0.25) return say([['pt', rand(['Isso, Cecília!','Muito bem, Cecília!','Arrasou, Cecília!'])]]);
-  return say([['en', rand(['Yes!','Great job!','Very good!','Awesome!','You did it!','Super!','Well done!'])]]);
-}
+const praise = () => say([['en', rand(['Yes!','Great job!','Good job!','Wow!'])]]);
 
 /* ================= SOUND FX ================= */
 let ac = null;
@@ -513,9 +610,9 @@ function matches(list, w){
 }
 function listen(w){
   return new Promise(res => {
-    if (!SR) return res({fatal:true});
+    if (!SR) return res({fatal:true, heard:[]});
     hush();
-    let r; try { r = new SR(); } catch (e) { return res({fatal:true}); }
+    let r; try { r = new SR(); } catch (e) { return res({fatal:true, heard:[]}); }
     r.lang = 'en-US'; r.interimResults = true; r.maxAlternatives = 5; r.continuous = false;
     const heard = new Set(); let done = false, tm = null;
     const fin = o => { if (done) return; done = true; clearTimeout(tm); try { r.abort(); } catch (e) {} res({...o, heard:[...heard]}); };
@@ -542,14 +639,9 @@ function renderSplash(){
   screen = 'splash';
   app.innerHTML = `<div class="splash">
     <div class="hero emo">🐰</div>
-    <h1>Hi, Cecília!<small>Vamos aprender inglês?</small></h1>
+    <h1>Hi, Cecília!<small>${ALLW.length} palavras em inglês para aprender com a mamãe</small></h1>
     <button class="go" id="go">Vamos! ▶</button></div>`;
-  $('#go').onclick = async () => {
-    actx(); sfx.ding();
-    renderMap();
-    await Promise.race([clipsReady, wait(2500)]);
-    say([['en','Hi, Cecília!'],['pt','Vamos brincar de inglês? Escolhe a bolinha que está pulando!']]);
-  };
+  $('#go').onclick = () => { actx(); sfx.ding(); renderMap(); };
 }
 
 function topBar(){
@@ -562,13 +654,12 @@ function topBar(){
   </div>`;
 }
 function wireTop(){
-  $('#hi').onclick = () => say([['en','Hi, Cecília!'],['pt','Eu sou a Bunny!']]);
+  $('#hi').onclick = () => say([['en','Hi, Cecília!']]);
   $('#alb').onclick = renderAlbum;
   const g = $('#gear'); let t = null;
-  const start = e => { e.preventDefault(); g.classList.add('hold'); t = setTimeout(() => { g.classList.remove('hold'); openParent(); }, 1500); };
+  const start = e => { e.preventDefault(); g.classList.add('hold'); t = setTimeout(() => { g.classList.remove('hold'); openParent(); }, 1200); };
   const stop = () => { g.classList.remove('hold'); clearTimeout(t); };
   g.addEventListener('pointerdown', start); g.addEventListener('pointerup', stop); g.addEventListener('pointerleave', stop); g.addEventListener('pointercancel', stop);
-  g.addEventListener('click', () => { if (!document.querySelector('.overlay')) say([['pt','Peça para a mamãe ou o papai.']]); });
 }
 
 function renderMap(){
@@ -584,11 +675,11 @@ function layoutMap(scroll){
   WORLDS.forEach(wd => {
     html += `<div class="banner" style="top:${y - 28}px;--wc:${wd.color}"><span class="emo">${wd.icon}</span>${wd.name}</div>`;
     y += 110;
-    for (let li = 0; li < LESSONS_PER_WORLD; li++, g++){
+    for (let li = 0; li < LPW; li++, g++){
       const x = W / 2 + Math.sin(g * 1.1 + 0.6) * amp;
       const done = isDone(g), current = g === cur, playable = done || current || S.settings.unlockAll;
       const cls = current ? 'current' : playable ? 'open' : 'locked';
-      const ic = li === 2 ? '🎁' : wd.icon;
+      const ic = li === LPW - 1 ? '🎁' : wd.icon;
       const st = S.done[lessonKey(g)];
       const stars = done ? `<span class="nstars">${[1,2,3].map(i => `<span class="emo ${i <= st.stars ? '' : 'off'}">⭐</span>`).join('')}</span>` : '';
       html += `<button class="node ${cls}" data-g="${g}" style="left:${x}px;top:${y}px;--wc:${wd.color}" aria-label="${wd.name} ${li+1}"><span class="emo">${ic}</span>${playable ? '' : '<span class="lock emo">🔒</span>'}${stars}</button>`;
@@ -607,7 +698,7 @@ function layoutMap(scroll){
      <path d="${d}" fill="none" stroke="var(--trail-dot)" stroke-width="7" stroke-linecap="round" stroke-dasharray="1 24"/></svg>` + html;
   map.querySelectorAll('.node').forEach(b => b.onclick = () => {
     const g = +b.dataset.g;
-    if (b.classList.contains('locked')){ sfx.boop(); b.classList.add('shake'); setTimeout(() => b.classList.remove('shake'), 450); say([['pt','Essa ainda está trancada. Vamos na que está pulando!']]); return; }
+    if (b.classList.contains('locked')){ sfx.boop(); b.classList.add('shake'); setTimeout(() => b.classList.remove('shake'), 450); return; }
     actx(); runLesson(g);
   });
   if (scroll){ const wrap = $('#mapwrap'); wrap.scrollTop = Math.max(0, curY - wrap.clientHeight / 2); }
@@ -622,49 +713,53 @@ function renderAlbum(){
   app.innerHTML = `<div class="top"><button class="xbtn" id="back" aria-label="Voltar">←</button><span class="spacer"></span></div>
     <div class="album"><h2>Minhas figurinhas</h2><div class="agrid">${slots}</div></div>`;
   $('#back').onclick = renderMap;
-  say([['pt','Suas figurinhas! Toca numa para ouvir o nome em inglês.']]);
-  app.querySelectorAll('.slot[data-g]').forEach(b => b.onclick = () => { const s = STICKERS[+b.dataset.g]; b.classList.remove('shake'); void b.offsetWidth; b.style.animation = 'yay .5s'; setTimeout(() => b.style.animation = '', 500); say([['en', s[1]]]); });
+  app.querySelectorAll('.slot[data-g]').forEach(b => b.onclick = () => { b.style.animation = 'none'; void b.offsetWidth; b.style.animation = 'yay .5s'; say([['en', STICKERS[+b.dataset.g][1]]]); });
 }
 
 /* ================= LESSON ================= */
 function optionsFor(w, pool, n){
   let others = shuffle(pool.filter(x => x !== w));
   if (others.length < n - 1) others = others.concat(shuffle(worldOf(w).words.filter(x => x !== w && !others.includes(x))));
-  if (others.length < n - 1) others = others.concat(shuffle(ALLW.filter(x => x !== w && !others.includes(x))));
   return shuffle([w, ...others.slice(0, n - 1)]);
 }
+const weakness = w => { const s = S.words[w.en]; return s ? s.miss * 2 - s.ok - s.streak : 0; };
 function weakWords(exclude){
-  const doneWorldWords = [];
+  const seen = [];
   for (let g = 0; g < TOTAL; g++) if (isDone(g)){
-    const wd = WORLDS[Math.floor(g / 3)], li = g % 3;
-    (li === 2 ? wd.words : wd.words.slice(li * 3, li * 3 + 3)).forEach(w => { if (!doneWorldWords.includes(w)) doneWorldWords.push(w); });
+    const wd = WORLDS[Math.floor(g / LPW)], li = g % LPW;
+    (li === LPW - 1 ? wd.words : wd.words.slice(li * 3, li * 3 + 3)).forEach(w => { if (!seen.includes(w)) seen.push(w); });
   }
-  return shuffle(doneWorldWords.filter(w => !exclude.includes(w) && wordState(w) === 'weak'))
-    .sort((a, b) => (stat(b).miss - stat(b).ok) - (stat(a).miss - stat(a).ok));
+  return shuffle(seen.filter(w => !exclude.includes(w) && wordState(w) === 'weak')).sort((a, b) => weakness(b) - weakness(a));
 }
 function buildLesson(g){
-  const wd = WORLDS[Math.floor(g / 3)], li = g % 3, W = wd.words, mic = micOn();
+  const wd = WORLDS[Math.floor(g / LPW)], li = g % LPW, W = wd.words;
   const T = [];
-  const fresh = li < 2 ? W.slice(li * 3, li * 3 + 3) : [];
-  // reforço: palavras que ela errou em lições anteriores voltam primeiro
-  weakWords(li < 2 ? fresh : W).slice(0, 2).forEach(w => {
+  const review = li === LPW - 1;
+  const fresh = review ? [] : W.slice(li * 3, li * 3 + 3);
+  // reforço: palavras erradas em lições anteriores voltam primeiro
+  weakWords(review ? W : fresh).slice(0, 2).forEach(w => {
     if (stat(w).miss >= 2) T.push({type:'intro', w, quick:true});
     T.push({type:'pick', w, n:3, pool:worldOf(w).words});
   });
-  if (li < 2){
+  if (!review){
     const known = W.slice(0, li * 3 + 3);
     fresh.forEach((w, i) => { T.push({type:'intro', w}); if (i > 0) T.push({type:'pick', w, n:2, pool:fresh.slice(0, i + 1)}); });
-    shuffle(fresh).forEach(w => T.push({type:'pick', w, n:li === 0 ? 2 : 3, pool:known}));
-    if (mic) shuffle(fresh).slice(0, 2).forEach(w => T.push({type:'say', w, recall:false}));
     shuffle(fresh).forEach(w => T.push({type:'pick', w, n:li === 0 ? 3 : 4, pool:known}));
     T.push({type:'bubbles', w:rand(fresh), pool:known});
   } else {
-    shuffle(W).forEach(w => T.push({type:'pick', w, n:3, pool:W}));
-    if (mic) shuffle(W).slice(0, 3).forEach(w => T.push({type:'say', w, recall:true}));
-    shuffle(W).slice(0, 4).forEach(w => T.push({type:'pick', w, n:4, pool:W}));
+    const order = shuffle(W).sort((a, b) => weakness(b) - weakness(a));
+    order.slice(0, 6).forEach(w => T.push({type:'pick', w, n:li ? 4 : 3, pool:W}));
+    if (micOn()) shuffle(W).slice(0, 2).forEach(w => T.push({type:'say', w}));
     T.push({type:'bubbles', w:rand(W), pool:W});
   }
   return T;
+}
+
+/* dicas para a mãe: texto discreto no topo, o app não fala comandos */
+function tip(html){
+  const el = $('#tip'); if (!el) return;
+  el.hidden = !S.settings.tips || !html;
+  el.innerHTML = html ? `<span class="emo">👩</span><span>${html}</span>` : '';
 }
 
 let stage = null;
@@ -676,10 +771,12 @@ async function runLesson(g){
   app.innerHTML = `<div class="lesson">
     <div class="lbar"><button class="xbtn" id="x" aria-label="Sair">✕</button>
       <div class="prog"><div class="fill" id="fill" style="width:0"></div><span class="hopper emo" id="hop" style="left:0">🐰</span></div></div>
+    <div class="momtip" id="tip" hidden></div>
     <div class="stage" id="stage"></div></div>`;
   stage = $('#stage');
   $('#x').onclick = () => askExit(ctx);
   const setProg = p => { $('#fill').style.width = (p * 100) + '%'; $('#hop').style.left = (p * 100) + '%'; };
+  await Promise.race([clipsReady, wait(2000)]);
   for (let i = 0; i < tasks.length; i++){
     if (!alive(tok)) return;
     setProg(i / tasks.length);
@@ -706,7 +803,7 @@ async function runLesson(g){
         }
       }
     }
-    if (r.spoke !== undefined && r.spoke !== null){ const s = stat(t.w); s.spokeTry++; if (r.spoke === true) s.spokeOk++; save(); }
+    if (r.spoke === true || r.spoke === false){ const s = stat(t.w); s.spokeTry++; if (r.spoke) s.spokeOk++; save(); }
     await wait(250);
   }
   if (!alive(tok)) return;
@@ -720,87 +817,63 @@ function askExit(ctx){
   o.innerHTML = `<div class="ask card"><div class="emo" style="font-size:80px">🐰</div>
     <div class="row"><button class="no" id="stay" aria-label="Continuar">▶</button><button class="yes" id="leave" aria-label="Sair">🏠</button></div></div>`;
   document.body.appendChild(o);
-  say([['pt','Quer parar? Toca na casinha para sair, ou no verde para continuar.']]);
-  o.querySelector('#stay').onclick = () => { hush(); o.remove(); };
+  o.querySelector('#stay').onclick = () => o.remove();
   o.querySelector('#leave').onclick = () => { o.remove(); ctx.cleanup.forEach(f => f()); renderMap(); };
+}
+
+function bigCard(w, labelCls = 'big'){
+  stage.innerHTML = `<div class="intro"><button class="bigpic card" id="pic" aria-label="Ouvir">${pic(w)}</button>${label(w, labelCls)}<div class="actions" id="act"></div></div>`;
+  const p = $('#pic');
+  p.onclick = () => { p.classList.remove('bounce'); void p.offsetWidth; p.classList.add('bounce'); say([['en', w.en]]); };
 }
 
 async function tIntro(t, ctx){
   const w = t.w;
-  stage.innerHTML = `<div class="intro"><button class="bigpic card" id="pic" aria-label="Ouvir">${pic(w)}</button>${label(w, 'big')}<div class="actions" id="act"></div></div>`;
-  const p = $('#pic');
-  p.onclick = () => { p.classList.remove('bounce'); void p.offsetWidth; p.classList.add('bounce'); say([['en', w.en]]); };
-  await say([['pt', t.quick ? rand(['Lembra?','Vamos lembrar?']) : rand(['Olha!','Olha só!','Vamos ver?'])], ['en', w.en]]);
-  if (!alive(ctx.tok)) return;
-  await wait(300);
-  await say([['en', w.en]]);
-  if (!alive(ctx.tok)) return;
-  if (t.quick){
-    $('#act').innerHTML = `<button class="next" id="nx" aria-label="Próximo">➜</button>`;
-    await tap($('#nx')); hush(); return {};
-  }
+  bigCard(w);
+  tip(t.quick
+    ? `Ela errou esta antes. Aponte e repitam juntas: <b>${esc(w.en)}</b> (${esc(w.pt)}).`
+    : `Aponte e diga junto: <b>${esc(w.en)}</b> (${esc(w.pt)}). Pergunte <b>"What is this?"</b> e deixe ela repetir.${micOn() ? ' O 🎤 escuta ela.' : ''}`);
+  await say([['en', w.en]]); if (!alive(ctx.tok)) return;
+  await wait(500);
+  await say([['en', w.en]]); if (!alive(ctx.tok)) return;
   return speakPractice(w, ctx, {recall:false, act:$('#act')});
 }
 
 async function tSay(t, ctx){
   const w = t.w;
-  stage.innerHTML = `<div class="intro"><button class="bigpic card" id="pic" aria-label="Ouvir">${pic(w)}</button>${label(w, 'big' + (t.recall ? ' hidden' : ''))}<div class="actions" id="act"></div></div>`;
-  $('#pic').onclick = () => say([['en', w.en]]);
-  if (!t.recall) await say([['en', w.en]]);
-  if (!alive(ctx.tok)) return;
-  const r = await speakPractice(w, ctx, {recall:t.recall, act:$('#act')});
-  const l = stage.querySelector('.lbl'); if (l) l.classList.remove('hidden');
+  bigCard(w, 'big hidden');
+  tip(`Pergunte <b>"What is this?"</b> e espere ela lembrar. 💡 toca a palavra se ela precisar de ajuda.`);
+  const r = await speakPractice(w, ctx, {recall:true, act:$('#act')});
+  stage.querySelector('.lbl')?.classList.remove('hidden');
   return r;
 }
 
+// ➜ é da mãe: avança quando ela falou (ou quando é hora de seguir). 🎤 deixa o app escutar.
 async function speakPractice(w, ctx, {recall, act}){
-  if (!micOn()){
-    act.innerHTML = `<div class="say-hint">Repete comigo!</div><button class="next" id="nx" aria-label="Próximo">➜</button>`;
-    await say([['pt','Agora fala você:'], ['en', w.en]]);
-    await tap($('#nx')); hush();
-    return {spoke:null};
-  }
+  const mic = micOn();
   act.innerHTML = (recall ? `<button class="round" id="hint" aria-label="Dica">💡</button>` : '') +
-    `<button class="mic" id="mic" aria-label="Falar">🎤</button><button class="round" id="sk" aria-label="Pular">⏭️</button>`;
-  const micB = $('#mic'), skB = $('#sk');
-  if (recall){ $('#hint').onclick = () => { stage.querySelector('.lbl')?.classList.remove('hidden'); say([['en', w.en]]); }; }
-  await say(recall ? [['pt','Como se fala em inglês? Toca no microfone!']] : [['pt','Agora fala você! Toca no microfone.']]);
-  let tries = 0, silent = 0;
+    (mic ? `<button class="mic" id="mic" aria-label="Falar">🎤</button>` : '') +
+    `<button class="next ${mic ? 'small' : ''}" id="nx" aria-label="Próximo">➜</button>`;
+  if (recall) $('#hint').onclick = () => { stage.querySelector('.lbl')?.classList.remove('hidden'); say([['en', w.en]]); };
+  const nx = $('#nx'), micB = $('#mic');
+  let tried = false;
   while (alive(ctx.tok)){
-    const which = await Promise.race([tap(micB).then(() => 'mic'), tap(skB).then(() => 'skip')]);
+    const which = await Promise.race([tap(nx).then(() => 'next'), micB ? tap(micB).then(() => 'mic') : new Promise(() => {})]);
     if (!alive(ctx.tok)) return;
-    if (which === 'skip'){ hush(); return {spoke:null}; }
+    if (which === 'next'){ hush(); return {spoke: tried ? false : null}; }
     micB.classList.add('listening'); micB.textContent = '👂';
     const res = await listen(w);
     micB.classList.remove('listening'); micB.textContent = '🎤';
     if (!alive(ctx.tok)) return;
-    if (res.fatal){
-      micBroken = true;
-      act.innerHTML = `<div class="say-hint">Repete comigo!</div><button class="next" id="nx" aria-label="Próximo">➜</button>`;
-      await say([['pt','O microfone não está ligado. Repete comigo:'], ['en', w.en]]);
-      await tap($('#nx')); hush();
-      return {spoke:null};
-    }
+    if (res.fatal){ micBroken = true; micB.remove(); nx.classList.remove('small'); continue; }
     if (res.ok){
       micB.classList.add('ok'); sfx.ding(); confetti(60);
       stage.querySelector('.lbl')?.classList.remove('hidden');
-      await say([['en', rand(['Yes!','Perfect!','Great!','Wow!'])], ['pt','Você falou'], ['en', w.en]]);
+      await say([['en', 'Yes!']]); await wait(600);
       return {spoke:true};
     }
-    if (!res.heard.length){
-      silent++;
-      if (silent >= 3){ await say([['pt','Tudo bem! Vamos juntas:'], ['en', w.en]]); return {spoke:null}; }
-      await say([['pt','Não ouvi... Fala bem alto!'], ['en', w.en]]);
-      continue;
-    }
-    tries++;
-    stage.querySelector('.lbl')?.classList.remove('hidden');
-    if (tries >= 2){
-      sfx.ding();
-      await say([['pt','Muito bem! Escuta de novo:'], ['en', w.en]]);
-      return {spoke:'approx'};
-    }
-    await say([['pt','Quase! Escuta:'], ['en', w.en], ['pt','Tenta de novo!']]);
+    if (res.heard.length) tried = true;
+    say([['en', w.en]]);  // reforço: só repete a palavra, a mãe incentiva
   }
 }
 
@@ -810,8 +883,8 @@ function tPick(t, ctx){
     const cols = opts.length === 4 ? 2 : opts.length, rows = opts.length === 4 ? 2 : 1;
     stage.innerHTML = `<div class="prompt"><button class="speaker" id="rep" aria-label="Ouvir de novo">🔊</button></div>
       <div class="opts" style="--cols:${cols};--rows:${rows}">${opts.map((o, i) => `<button class="opt card" data-i="${i}">${pic(o)}${label(o)}</button>`).join('')}</div>`;
-    const phrase = ['pt', rand(['Cadê','Onde está','Mostra pra mim:','Toca no'])];
-    const ask = () => say([phrase, ['en', w.en]]);
+    tip(`Pergunte: <b>"${esc(whereQ(w))}"</b> 🔊 repete a palavra.`);
+    const ask = () => say([['en', w.en]]);
     $('#rep').onclick = ask; ask();
     let wrong = 0, busy = false, finished = false;
     const btns = [...stage.querySelectorAll('.opt')];
@@ -821,15 +894,15 @@ function tPick(t, ctx){
       const o = opts[+b.dataset.i];
       if (o === w){
         finished = true; b.classList.remove('hint'); b.classList.add('right'); sfx.ding(); if (!wrong) confetti(40);
-        await say([['en', w.en]]); await praise(); await wait(200);
+        await praise(); await wait(200);
         resolve({firstTry: wrong === 0});
       } else {
         if (b.disabled) return;
         wrong++; busy = true; b.disabled = true; b.classList.add('wrong', 'shake'); sfx.boop();
         setTimeout(() => b.classList.remove('shake'), 450);
-        const left = btns.filter(x => !x.disabled).length;
-        if (wrong >= 2 || left <= 1) right.classList.add('hint');
-        await say([['pt','Esse é'], ['en', o.en], ['pt', rand(['Agora, cadê','Procura o','Onde está'])], ['en', w.en]]);
+        if (wrong >= 2 || btns.filter(x => !x.disabled).length <= 1) right.classList.add('hint');
+        // reforço: diz o nome do que ela tocou e repete a palavra pedida
+        await say([['en', o.en]]); await wait(350); await say([['en', w.en]]);
         busy = false;
       }
     });
@@ -840,8 +913,9 @@ function tBubbles(t, ctx){
   return new Promise(resolve => {
     const w = t.w, others = optionsFor(w, t.pool, 4).filter(o => o !== w);
     stage.innerHTML = `<div class="prompt"><button class="speaker" id="rep" aria-label="Ouvir de novo">🔊</button><div class="dots" id="dots"><i></i><i></i><i></i></div></div><div class="pond" id="pond"></div>`;
+    tip(`Diga: <b>"Pop ${esc(noun(w))}!"</b> Ela estoura 3 bolhas certas.`);
     const pond = $('#pond');
-    const ask = () => say([['pt','Estoura as bolhas:'], ['en', w.en]]);
+    const ask = () => say([['en', w.en]]);
     $('#rep').onclick = ask; ask();
     let got = 0, wrong = 0, k = 0, ended = false;
     const spawn = () => {
@@ -863,12 +937,12 @@ function tBubbles(t, ctx){
           setTimeout(() => b.remove(), 300);
           if (got >= 3){
             ended = true; clearInterval(iv); sfx.ding(); confetti(70);
-            await say([['en', w.en]]); await praise();
+            await praise();
             pond.innerHTML = ''; resolve({firstTry: wrong === 0});
           } else say([['en', w.en]]);
         } else {
           wrong++; sfx.boop(); inner.classList.remove('wob'); void inner.offsetWidth; inner.classList.add('wob');
-          say([['pt','Esse é'], ['en', o.en]]);
+          say([['en', o.en]]);
         }
       };
       b.addEventListener('animationend', e => { if (e.animationName === 'rise') b.remove(); });
@@ -885,19 +959,17 @@ function finishLesson(g, errors){
   const prev = S.done[lessonKey(g)];
   S.done[lessonKey(g)] = {stars: Math.max(stars, prev ? prev.stars : 0), at: new Date().toISOString()};
   save();
-  const s = STICKERS[g];
+  const s = STICKERS[g], wd = WORLDS[Math.floor(g / LPW)];
+  tip('');
   stage.innerHTML = `<div class="done">
-    <h2>Parabéns!</h2>
     <div class="bigstars">${[1,2,3].map(i => `<span class="emo ${i <= stars ? '' : 'off'}" style="animation-delay:${.2 + i * .25}s">⭐</span>`).join('')}</div>
-    <div class="sticker card"><span class="emo">${s[0]}</span><b>${s[1]}</b><small>${prev ? 'figurinha' : 'figurinha nova!'}</small></div>
+    <button class="sticker card" id="stk"><span class="emo">${s[0]}</span><b>${s[1]}</b><small>${prev ? 'figurinha' : 'figurinha nova!'}</small></button>
+    ${S.settings.tips ? `<div class="mission"><b>Para fazer em casa</b>${esc(wd.home)}</div>` : ''}
     <button class="next" id="nx" aria-label="Voltar para a trilha">➜</button></div>`;
   sfx.fanfare(); confetti(180);
-  (async () => {
-    await say([['pt','Parabéns, Cecília!'], ['en','You did it!']]);
-    await say([['pt', prev ? 'Olha a sua figurinha:' : 'Você ganhou uma figurinha:'], ['en', s[1]]]);
-  })();
+  (async () => { await say([['en','You did it!']]); await wait(300); await say([['en', s[1]]]); })();
   $('#nx').onclick = () => { hush(); renderMap(); };
-  stage.querySelector('.sticker').onclick = () => say([['en', s[1]]]);
+  $('#stk').onclick = () => say([['en', s[1]]]);
 }
 
 /* ================= PARENT AREA ================= */
@@ -913,12 +985,13 @@ function openParent(){
     const micStatus = !SR ? 'Este navegador não reconhece fala. Use o Safari do iPad.' : micBroken ? 'O microfone foi bloqueado. Libere em Ajustes › Safari › Microfone e recarregue a página.' : 'Disponível.';
     const rows = WORLDS.map(wd => `<div class="wrow"><span class="wn">${wd.name}</span>${wd.words.map(w => {
       const s = S.words[w.en], ws = wordState(w);
-      const tip = s ? `${s.ok} acertos de primeira, ${s.miss} com ajuda` : 'ainda não viu';
-      return `<span class="chip ${ws}" title="${tip}">${w.en} · ${w.pt}${s && s.miss ? ` (${s.miss}✗)` : ''}</span>`; }).join('')}</div>`).join('');
+      return `<span class="chip ${ws}">${esc(w.en)} · ${esc(w.pt)}${s && s.miss ? ` (${s.miss}✗)` : ''}</span>`; }).join('')}</div>`).join('');
     o.innerHTML = `<div class="parent card">
       <button class="close" id="pc" aria-label="Fechar">✕</button>
       <h2>Área dos pais</h2>
-      <p>Cada lição apresenta 3 palavras novas: ela vê a figura, ouve a palavra, tenta falar e depois acha a figura certa entre outras. Quando erra, o app diz o nome do que ela tocou, repete o pedido e acende a resposta certa no segundo erro. A palavra errada volta 3 telas depois (até 2 vezes na lição) e reaparece no começo das próximas lições até ela acertar de primeira.</p>
+      <p>O app só fala em inglês, e só a palavra. Quem conduz é você: em cada tela, a faixa com 👩 no topo diz o que perguntar. Cada lição traz 3 palavras novas (figura, palavra, ela repete) e depois ela acha as figuras e estoura bolhas. Na lição 🎁, ela revisa o mundo todo.</p>
+      <p>Quando ela erra, o app diz o nome do que ela tocou e repete a palavra certa. No segundo erro, a figura certa brilha. A palavra volta 3 telas depois e reaparece no começo das próximas lições até ela acertar de primeira.</p>
+      <p>No 🎤, o ➜ é seu: avance quando ela tiver falado, mesmo que o app não tenha entendido.</p>
       <div class="sum">
         <div><b>${Object.keys(S.done).length}/${TOTAL}</b>lições</div>
         <div><b>${learned}/${ALLW.length}</b>palavras vistas</div>
@@ -929,19 +1002,18 @@ function openParent(){
       <div class="legend"><span class="chip">não viu</span><span class="chip learn">aprendendo</span><span class="chip weak">em reforço</span><span class="chip master">dominada (3 acertos seguidos)</span></div>
       ${rows}
       <h3>Ajustes</h3>
-      <div class="setting"><span>Microfone (ela fala a palavra)<small class="status">${micStatus}</small></span><span style="display:flex;gap:8px"><button class="btn" id="mt">Testar</button><button class="btn ${st.mic ? 'on' : ''}" id="sm">${st.mic ? 'Ligado' : 'Desligado'}</button></span></div>
+      <div class="setting"><span>Dicas para a mãe<small>A faixa 👩 no topo de cada tela e a missão para fazer em casa.</small></span><button class="btn ${st.tips ? 'on' : ''}" id="st">${st.tips ? 'Sim' : 'Não'}</button></div>
+      <div class="setting"><span>Microfone (o app escuta ela)<small class="status">${micStatus}</small></span><span style="display:flex;gap:8px"><button class="btn" id="mt">Testar</button><button class="btn ${st.mic ? 'on' : ''}" id="sm">${st.mic ? 'Ligado' : 'Desligado'}</button></span></div>
       <div class="setting"><span>Mostrar a palavra escrita<small>Ajuda a associar a escrita, mesmo antes de ler.</small></span><button class="btn ${st.showText ? 'on' : ''}" id="sw">${st.showText ? 'Sim' : 'Não'}</button></div>
-      <div class="setting"><span>Voz em inglês mais devagar</span><span style="display:flex;gap:8px"><button class="btn" id="vt">Ouvir</button><button class="btn ${st.slow ? 'on' : ''}" id="ss">${st.slow ? 'Devagar' : 'Normal'}</button></span></div>
-      <div class="setting"><span>Liberar todas as lições<small>Para vocês explorarem. Ela continua com a trilha em ordem.</small></span><button class="btn ${st.unlockAll ? 'on' : ''}" id="su">${st.unlockAll ? 'Liberado' : 'Em ordem'}</button></div>
+      <div class="setting"><span>Liberar todas as lições<small>Para vocês escolherem o tema do dia fora da ordem.</small></span><button class="btn ${st.unlockAll ? 'on' : ''}" id="su">${st.unlockAll ? 'Liberado' : 'Em ordem'}</button></div>
       <div class="setting"><span>Zerar o progresso<small>Apaga lições, estrelas e figurinhas deste iPad.</small></span><button class="btn danger" id="rz">Zerar</button></div>
-      <p style="opacity:.65;margin-top:14px">${clipCount ? `Voz gravada: Google Chirp 3 HD (${clipCount} áudios). ` : ''}Voz de reserva: ${VO.en ? VO.en.name : 'padrão'} (inglês) · ${VO.pt ? VO.pt.name : 'padrão'} (português). Vozes "aprimoradas" ficam em Ajustes › Acessibilidade › Conteúdo Falado › Vozes.</p>
+      <p style="opacity:.65;margin-top:14px">${clipCount ? `Voz gravada: Google Chirp 3 HD (${clipCount} áudios).` : `Voz do iPad: ${VO.en ? VO.en.name : 'padrão'}. Os áudios gravados não carregaram.`}</p>
     </div>`;
     o.querySelector('#pc').onclick = () => { o.remove(); if (screen === 'map') renderMap(); };
+    o.querySelector('#st').onclick = () => { st.tips = !st.tips; save(); render(); };
     o.querySelector('#sm').onclick = () => { st.mic = !st.mic; micBroken = false; save(); render(); };
     o.querySelector('#sw').onclick = () => { st.showText = !st.showText; save(); render(); };
-    o.querySelector('#ss').onclick = () => { st.slow = !st.slow; save(); render(); };
     o.querySelector('#su').onclick = () => { st.unlockAll = !st.unlockAll; save(); render(); };
-    o.querySelector('#vt').onclick = () => say([['en','Hello Cecília! This is a cat.'], ['pt','Olá! Esta é a voz em português.']]);
     o.querySelector('#mt').onclick = async e => {
       const b = e.currentTarget; b.textContent = 'Fale "dog"…';
       micBroken = false;
