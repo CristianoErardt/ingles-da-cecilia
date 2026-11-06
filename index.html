@@ -367,8 +367,51 @@ function pickVoices(){
 }
 if ('speechSynthesis' in window){ pickVoices(); speechSynthesis.onvoiceschanged = pickVoices; }
 
+/* Áudio gravado (Google Chirp 3 HD, gerado por tools/gerar-audios.mjs).
+   Cada fala vira audio/<lang>_<slug>.mp3; sem o arquivo, cai na voz do iPad. */
+const slug = t => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const clipName = (lang, text) => lang + '_' + slug(text);
+const CLIPS = {};
+let clipNow = null, clipCount = 0;
+let clipsReady = Promise.resolve();
+const loadClips = async () => {
+  try {
+    const a = actx(true); if (!a) return;
+    const r = await fetch('audio/manifest.json', {cache:'no-cache'}); if (!r.ok) return;
+    const names = (await r.json()).clips || [];
+    const queue = names.slice();
+    const worker = async () => {
+      while (queue.length){
+        const n = queue.shift();
+        try {
+          const buf = await (await fetch('audio/' + n + '.mp3')).arrayBuffer();
+          CLIPS[n] = await new Promise((ok, no) => a.decodeAudioData(buf, ok, no));
+          clipCount++;
+        } catch (e) {}
+      }
+    };
+    await Promise.all([1,2,3,4,5,6].map(worker));
+  } catch (e) {}
+};
+function stopClip(){ if (clipNow){ try { clipNow.onended = null; clipNow.stop(); } catch (e) {} clipNow = null; } }
+function playClip(buf){
+  return new Promise(res => {
+    const a = actx(); if (!a) return res();
+    const s = a.createBufferSource(), g = a.createGain();
+    s.buffer = buf; g.gain.value = 1;
+    s.connect(g).connect(a.destination);
+    let done = false;
+    const fin = () => { if (!done){ done = true; clearTimeout(t); if (clipNow === s) clipNow = null; res(); } };
+    s.onended = fin;
+    const t = setTimeout(fin, buf.duration * 1000 + 400);
+    clipNow = s; s.start();
+  });
+}
+
 let sayId = 0;
 function utter(text, lang){
+  const clip = CLIPS[clipName(lang, text)];
+  if (clip) return playClip(clip);
   return new Promise(res => {
     if (!('speechSynthesis' in window)) return res();
     const u = new SpeechSynthesisUtterance(text);
@@ -385,13 +428,14 @@ function utter(text, lang){
 }
 async function say(parts){
   const my = ++sayId;
+  stopClip();
   if ('speechSynthesis' in window && (speechSynthesis.speaking || speechSynthesis.pending)){ speechSynthesis.cancel(); await wait(80); }
   for (const [lang, text] of parts){
     if (my !== sayId) return;
     await utter(text, lang);
   }
 }
-function hush(){ sayId++; try { speechSynthesis.cancel(); } catch (e) {} }
+function hush(){ sayId++; stopClip(); try { speechSynthesis.cancel(); } catch (e) {} }
 async function praise(){
   const r = Math.random();
   if (r < 0.25) return say([['pt', rand(['Isso, Cecília!','Muito bem, Cecília!','Arrasou, Cecília!'])]]);
@@ -400,7 +444,7 @@ async function praise(){
 
 /* ================= SOUND FX ================= */
 let ac = null;
-function actx(){ try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); } catch (e) {} return ac; }
+function actx(noResume){ try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (!noResume && ac.state === 'suspended') ac.resume(); } catch (e) {} return ac; }
 function tone(freqs, {dur = .14, type = 'sine', gap = .09, vol = .18} = {}){
   const a = actx(); if (!a) return;
   freqs.forEach((f, i) => {
@@ -500,10 +544,11 @@ function renderSplash(){
     <div class="hero emo">🐰</div>
     <h1>Hi, Cecília!<small>Vamos aprender inglês?</small></h1>
     <button class="go" id="go">Vamos! ▶</button></div>`;
-  $('#go').onclick = () => {
+  $('#go').onclick = async () => {
     actx(); sfx.ding();
-    say([['en','Hi, Cecília!'],['pt','Vamos brincar de inglês? Escolhe a bolinha que está pulando!']]);
     renderMap();
+    await Promise.race([clipsReady, wait(2500)]);
+    say([['en','Hi, Cecília!'],['pt','Vamos brincar de inglês? Escolhe a bolinha que está pulando!']]);
   };
 }
 
@@ -765,8 +810,8 @@ function tPick(t, ctx){
     const cols = opts.length === 4 ? 2 : opts.length, rows = opts.length === 4 ? 2 : 1;
     stage.innerHTML = `<div class="prompt"><button class="speaker" id="rep" aria-label="Ouvir de novo">🔊</button></div>
       <div class="opts" style="--cols:${cols};--rows:${rows}">${opts.map((o, i) => `<button class="opt card" data-i="${i}">${pic(o)}${label(o)}</button>`).join('')}</div>`;
-    const phrase = rand(['Cadê','Onde está','Mostra pra mim:','Toca no']);
-    const ask = () => say([['pt', phrase], ['en', w.en]]);
+    const phrase = ['pt', rand(['Cadê','Onde está','Mostra pra mim:','Toca no'])];
+    const ask = () => say([phrase, ['en', w.en]]);
     $('#rep').onclick = ask; ask();
     let wrong = 0, busy = false, finished = false;
     const btns = [...stage.querySelectorAll('.opt')];
@@ -889,7 +934,7 @@ function openParent(){
       <div class="setting"><span>Voz em inglês mais devagar</span><span style="display:flex;gap:8px"><button class="btn" id="vt">Ouvir</button><button class="btn ${st.slow ? 'on' : ''}" id="ss">${st.slow ? 'Devagar' : 'Normal'}</button></span></div>
       <div class="setting"><span>Liberar todas as lições<small>Para vocês explorarem. Ela continua com a trilha em ordem.</small></span><button class="btn ${st.unlockAll ? 'on' : ''}" id="su">${st.unlockAll ? 'Liberado' : 'Em ordem'}</button></div>
       <div class="setting"><span>Zerar o progresso<small>Apaga lições, estrelas e figurinhas deste iPad.</small></span><button class="btn danger" id="rz">Zerar</button></div>
-      <p style="opacity:.65;margin-top:14px">Voz: ${VO.en ? VO.en.name : 'padrão'} (inglês) · ${VO.pt ? VO.pt.name : 'padrão'} (português). Vozes "aprimoradas" ficam em Ajustes › Acessibilidade › Conteúdo Falado › Vozes.</p>
+      <p style="opacity:.65;margin-top:14px">${clipCount ? `Voz gravada: Google Chirp 3 HD (${clipCount} áudios). ` : ''}Voz de reserva: ${VO.en ? VO.en.name : 'padrão'} (inglês) · ${VO.pt ? VO.pt.name : 'padrão'} (português). Vozes "aprimoradas" ficam em Ajustes › Acessibilidade › Conteúdo Falado › Vozes.</p>
     </div>`;
     o.querySelector('#pc').onclick = () => { o.remove(); if (screen === 'map') renderMap(); };
     o.querySelector('#sm').onclick = () => { st.mic = !st.mic; micBroken = false; save(); render(); };
@@ -923,6 +968,7 @@ try {
   $('#touchicon').href = c.toDataURL('image/png');
 } catch (e) {}
 
+clipsReady = loadClips();
 renderSplash();
 </script>
 </body>
